@@ -7,7 +7,7 @@ import { address, Address } from "ton-core";
 import { useState, useEffect } from 'react';
 import WebApp from "@twa-dev/sdk";
 import { useTonConnectModal } from '@tonconnect/ui-react';
-import { Locales, useTonConnectUI } from '@tonconnect/ui-react';
+import { Locales, useTonConnectUI , useIsConnectionRestored } from '@tonconnect/ui-react';
 
 declare global { interface Window { Telegram: any; } }
 
@@ -221,7 +221,7 @@ const myTransaction = {
       }
   ]
 }
-
+const connectionRestored = useIsConnectionRestored();
 
   return (
     <div className="wrapper">
@@ -258,9 +258,12 @@ const myTransaction = {
                 <label>language</label>
                 <select onChange={e => onLanguageChange(e.target.value)}>
                     <option value="en">en</option>
-                    <option value="ru">ru</option>
+                    <option value="fa">ru</option>
                 </select>
             </div>
+            {!connectionRestored &&(
+              <p>Please wait...</p>
+            )}
         </div>
       </div>
           </div>
