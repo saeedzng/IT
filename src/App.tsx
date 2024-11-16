@@ -210,8 +210,8 @@ const myTransaction = {
   validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
   messages: [
       {
-          address: "EQBBJBB3HagsujBqVfqeDUPJ0kXjgTPLWPFFffuNXNiJL0aA",
-          amount: "20000000",
+          address: "EQD6nwTiwkZdCboXJagUXiiOIWSGIChxv_p5uNO00-NOoluE",
+          amount: "10000000",
           // stateInit: "base64bocblahblahblah==" // just for instance. Replace with your transaction initState or remove
       },
       {
