@@ -7,7 +7,7 @@ import { address, Address } from "ton-core";
 import { useState, useEffect } from 'react';
 import WebApp from "@twa-dev/sdk";
 import { useTonConnectModal } from '@tonconnect/ui-react';
-// import { Locales, useTonConnectUI } from '@tonconnect/ui-react';
+import { Locales, useTonConnectUI } from '@tonconnect/ui-react';
 
 declare global { interface Window { Telegram: any; } }
 
@@ -202,6 +202,25 @@ function App() {
 
   const { state, open, close } = useTonConnectModal();
   const handleClose = () => { close(); };
+  const [tonConnectUI, setOptions] = useTonConnectUI();
+  const onLanguageChange = (lang: string) => {
+    setOptions({ language: lang as Locales });
+};
+const myTransaction = {
+  validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
+  messages: [
+      {
+          address: "EQBBJBB3HagsujBqVfqeDUPJ0kXjgTPLWPFFffuNXNiJL0aA",
+          amount: "20000000",
+          // stateInit: "base64bocblahblahblah==" // just for instance. Replace with your transaction initState or remove
+      },
+      {
+          address: "EQDmnxDMhId6v1Ofg_h5KR5coWlFG6e86Ro3pc7Tq4CA0-Jn",
+          amount: "60000000",
+          // payload: "base64bocblahblahblah==" // just for instance. Replace with your transaction payload or remove
+      }
+  ]
+}
 
 
   return (
@@ -230,6 +249,19 @@ function App() {
           <div>Modal state: {state?.status}</div>
           <button onClick={open}>Open-modal</button>
           <button onClick={handleClose}>Close-modal</button>
+          <div>
+            <button onClick={() => tonConnectUI.sendTransaction(myTransaction)}>
+                Send transaction
+            </button>
+
+            <div>
+                <label>language</label>
+                <select onChange={e => onLanguageChange(e.target.value)}>
+                    <option value="en">en</option>
+                    <option value="ru">ru</option>
+                </select>
+            </div>
+        </div>
       </div>
           </div>
         )]}
