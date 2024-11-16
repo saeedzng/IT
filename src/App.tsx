@@ -199,8 +199,8 @@ function App() {
   };
 
 
-    const { state, open, close } = useTonConnectModal();
-    const handleClose = () => { close(); };
+  const { state, open, close } = useTonConnectModal();
+  const handleClose = () => { close(); };
 
 
   return (
@@ -227,8 +227,8 @@ function App() {
           <div>
       <div>
           <div>Modal state: {state?.status}</div>
-          <button onClick={open}>Open modal</button>
-          <button onClick={handleClose}>Close modal</button>
+          <button onClick={open}>Open-modal</button>
+          <button onClick={handleClose}>Close-modal</button>
       </div>
           </div>
         )]}
