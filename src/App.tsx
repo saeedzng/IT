@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import WebApp from "@twa-dev/sdk";
 import { useTonConnectModal } from '@tonconnect/ui-react';
 import { Locales, useTonConnectUI , useIsConnectionRestored } from '@tonconnect/ui-react';
+import { beginCell } from "ton-core";
 
 declare global { interface Window { Telegram: any; } }
 
@@ -206,17 +207,22 @@ function App() {
   const onLanguageChange = (lang: string) => {
     setOptions({ language: lang as Locales });
 };
+const messageBody = beginCell()
+    .storeUint(3, 32) // Store the unsigned integer 3 in 32 bits
+    .endCell();
 const myTransaction = {
   validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
   messages: [
       {
-          address: "EQD6nwTiwkZdCboXJagUXiiOIWSGIChxv_p5uNO00-NOoluE",
+          address: "EQBP9a4IUksG-QP_lduDOXNxgn8rcEmEuEJzqhY6vPsYatlO",
           amount: "10000000",
+          body: messageBody.toBoc().toString('base64'),
           // stateInit: "base64bocblahblahblah==" // just for instance. Replace with your transaction initState or remove
       },
   ]
 }
 const connectionRestored = useIsConnectionRestored();
+
 
   return (
     <div className="wrapper">
