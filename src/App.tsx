@@ -1,5 +1,5 @@
 import "./App.css";
-import { TonConnectButton, useTonAddress } from "@tonconnect/ui-react";
+import { /* TonConnectButton, */ useTonAddress } from "@tonconnect/ui-react";
 import { useMasterContract } from "./hooks/useMasterContract";
 import { useWalletContract } from "./hooks/useWalletContract";
 import { useTonConnect } from "./hooks/useTonConnect";
@@ -7,6 +7,7 @@ import { address, Address } from "ton-core";
 import { useState, useEffect } from 'react';
 import WebApp from "@twa-dev/sdk";
 import { useTonConnectModal } from '@tonconnect/ui-react';
+// import { Locales, useTonConnectUI } from '@tonconnect/ui-react';
 
 declare global { interface Window { Telegram: any; } }
 
@@ -211,7 +212,7 @@ function App() {
             <img src="./logo.png" alt="Logo" className="logo" />
           </div>
           <div className="right">
-            <TonConnectButton />
+      
           </div>
         </div>
         <nav className="menu">
