@@ -1,5 +1,5 @@
 import "./App.css";
-import { /* TonConnectButton, */ useTonAddress } from "@tonconnect/ui-react";
+import { TonConnectButton, useTonAddress } from "@tonconnect/ui-react";
 import { useMasterContract } from "./hooks/useMasterContract";
 import { useWalletContract } from "./hooks/useWalletContract";
 import { useTonConnect } from "./hooks/useTonConnect";
@@ -238,7 +238,7 @@ function App() {
             <img src="./logo.png" alt="Logo" className="logo" />
           </div>
           <div className="right">
-
+            <TonConnectButton />
           </div>
         </div>
         <nav className="menu">
