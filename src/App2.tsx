@@ -3,19 +3,18 @@ import { /* TonConnectButton, */ useTonAddress } from "@tonconnect/ui-react";
 import { useMasterContract } from "./hooks/useMasterContract";
 import { useWalletContract } from "./hooks/useWalletContract";
 import { useTonConnect } from "./hooks/useTonConnect";
-import { Address } from "ton-core";
+import { address, Address } from "ton-core";
 import { useState, useEffect } from 'react';
 import WebApp from "@twa-dev/sdk";
 import { useTonConnectModal } from '@tonconnect/ui-react';
-import { Locales, useTonConnectUI, useIsConnectionRestored } from '@tonconnect/ui-react';
+import { Locales, useTonConnectUI , useIsConnectionRestored } from '@tonconnect/ui-react';
 import { beginCell } from "ton-core";
 
 declare global { interface Window { Telegram: any; } }
 
 function App() {
-  //local storages
-  function setWalletContractAddress(WalletContractAddress: string) { localStorage.setItem("WalletContractAddress", WalletContractAddress); }
-  function getWalletContractAddress() { const WalletContractAddress = localStorage.getItem("WalletContractAddress"); return WalletContractAddress ? WalletContractAddress : "0QDAz5XMJoGW3TJE8a6QwreoTTGjPcPGvAOWm_yD1_k-SyUO"; }
+  function setTonAddress(tonAddress: string) { localStorage.setItem("tonAddress", tonAddress); }
+  function getTonAddress() { const tonAddress = localStorage.getItem("tonAddress"); return tonAddress ? tonAddress : "0QDAz5XMJoGW3TJE8a6QwreoTTGjPcPGvAOWm_yD1_k-SyUO"; }
   function setOwnerTonAddress(ownertonAddress: string) { localStorage.setItem("ownertonAddress", ownertonAddress); }
   function getOwnerTonAddress() { const ownertonAddress = localStorage.getItem("ownertonAddress"); return ownertonAddress ? ownertonAddress : "EQD6nwTiwkZdCboXJagUXiiOIWSGIChxv_p5uNO00-NOoluE"; }
   function setDeployed(Deployed: string) { localStorage.setItem("deployed", Deployed); }
@@ -25,7 +24,6 @@ function App() {
   function setPageNumber(PageNumber: string) { localStorage.setItem("PageNumber", PageNumber); }
   function getPageNumber() { const PageNumber = localStorage.getItem("PageNumber"); return PageNumber ? PageNumber : "0"; }
 
-  //consts
   const [page_n, setPageN] = useState(Number(getPageNumber()));
   const { connected } = useTonConnect();
   const [isdeployed, setIsdeployed] = useState<boolean>(false);
@@ -34,22 +32,6 @@ function App() {
   const [showDetails, setShowDetails] = useState(false);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [isMDataLoaded, setIsMDataLoaded] = useState(false);
-  const toggleHelp = () => { setShowHelp(!showHelp); setShowDetails(false); };
-  const toggleDetails = () => { setShowDetails(!showDetails); setShowHelp(false); };
-  const [showDialog, setShowDialog] = useState(false);
-  const [chickenCount, setChickenCount] = useState(1);
-  const [actionType, setActionType] = useState<'ton' | 'egg'>('ton');
-
-  const { sendDeployByMaster, master_contract_balance, wc_addressss } = useMasterContract(
-    Address.parse(getOwnerTonAddress()), Address.parse(referal_address));
-
-  const { wallet_contract_address, wallet_contract_balance, wallet_owner_address, wallet_referal_address, withdraw_to_owner,
-    ch_number, send_buy_chicken_order, send_buy_chicken_by_eggs, send_recive_eggs_order, is_deployed,
-  } = useWalletContract(Address.parse(getWalletContractAddress()));
-
-  const realeggnumber: number = wallet_contract_balance ? wallet_contract_balance / 33333333 : 0;
-  const showbalance: number = wallet_contract_balance ? wallet_contract_balance / 1000000000 : 0;
-  const showchickennumber: number = ch_number ? ch_number : 0;
 
   useEffect(() => {
     const walletAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
@@ -68,16 +50,21 @@ function App() {
     }
   }, [connected]);
 
-
+  const { sendDeployByMaster, master_contract_balance, wc_addressss } = useMasterContract(
+    Address.parse(getOwnerTonAddress()),
+    Address.parse(referal_address)
+  );
 
   useEffect(() => {
     if (wc_addressss && isdeployed == true && getDeployed() == "false") {
-      setWalletContractAddress(wc_addressss.toString());
+      setTonAddress(wc_addressss.toString());
       setDeployed("true");
     }
   }, [isdeployed]);
 
-
+  const { wallet_contract_address, wallet_contract_balance, wallet_owner_address, wallet_referal_address, withdraw_to_owner,
+    ch_number, send_buy_chicken_order, send_buy_chicken_by_eggs, send_recive_eggs_order, is_deployed,
+  } = useWalletContract(Address.parse(getTonAddress()));
 
   useEffect(() => {
     if (is_deployed === 1) {
@@ -97,7 +84,14 @@ function App() {
     }
   }, [master_contract_balance]);
 
-
+  const realeggnumber: number = wallet_contract_balance ? wallet_contract_balance / 33333333 : 0;
+  const showbalance: number = wallet_contract_balance ? wallet_contract_balance / 1000000000 : 0;
+  const showchickennumber: number = ch_number ? ch_number : 0;
+  const toggleHelp = () => { setShowHelp(!showHelp); setShowDetails(false); };
+  const toggleDetails = () => { setShowDetails(!showDetails); setShowHelp(false); };
+  const [showDialog, setShowDialog] = useState(false);
+  const [chickenCount, setChickenCount] = useState(1);
+  const [actionType, setActionType] = useState<'ton' | 'egg'>('ton');
 
   const handleDialogOpen = (type: 'ton' | 'egg') => {
     if (!isDataLoaded) { WebApp.showAlert("You Are Offline"); return; }
@@ -212,22 +206,22 @@ function App() {
   const [tonConnectUI, setOptions] = useTonConnectUI();
   const onLanguageChange = (lang: string) => {
     setOptions({ language: lang as Locales });
-  };
-  const messageBody = beginCell()
+};
+const messageBody = beginCell()
     .storeUint(3, 32) // Store the unsigned integer 3 in 32 bits
     .endCell();
-  const myTransaction = {
-    validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
-    messages: [
+const myTransaction = {
+  validUntil: Math.floor(Date.now() / 1000) + 60, // 60 sec
+  messages: [
       {
-        address: "EQBP9a4IUksG-QP_lduDOXNxgn8rcEmEuEJzqhY6vPsYatlO",
-        amount: "10000000",
-        body: messageBody.toBoc().toString('base64'),
-        // stateInit: "base64bocblahblahblah==" // just for instance. Replace with your transaction initState or remove
+          address: "EQBP9a4IUksG-QP_lduDOXNxgn8rcEmEuEJzqhY6vPsYatlO",
+          amount: "10000000",
+          body: messageBody.toBoc().toString('base64'),
+          // stateInit: "base64bocblahblahblah==" // just for instance. Replace with your transaction initState or remove
       },
-    ]
-  }
-  const connectionRestored = useIsConnectionRestored();
+  ]
+}
+const connectionRestored = useIsConnectionRestored();
 
 
   return (
@@ -238,7 +232,7 @@ function App() {
             <img src="./logo.png" alt="Logo" className="logo" />
           </div>
           <div className="right">
-
+      
           </div>
         </div>
         <nav className="menu">
@@ -252,27 +246,27 @@ function App() {
       <div className="down-section" >
         {[page_n === 0 && (
           <div>
-            <div>
-              <div>Modal state: {state?.status}</div>
-              <button onClick={open}>Open-modal</button>
-              <button onClick={handleClose}>Close-modal</button>
-              <div>
-                <button onClick={() => tonConnectUI.sendTransaction(myTransaction)}>
-                  Send transaction
-                </button>
+      <div>
+          <div>Modal state: {state?.status}</div>
+          <button onClick={open}>Open-modal</button>
+          <button onClick={handleClose}>Close-modal</button>
+          <div>
+            <button onClick={() => tonConnectUI.sendTransaction(myTransaction)}>
+                Send transaction
+            </button>
 
-                <div>
-                  <label>language</label>
-                  <select onChange={e => onLanguageChange(e.target.value)}>
+            <div>
+                <label>language</label>
+                <select onChange={e => onLanguageChange(e.target.value)}>
                     <option value="en">en</option>
                     <option value="fa">ru</option>
-                  </select>
-                </div>
-                {!connectionRestored && (
-                  <p>Please wait...</p>
-                )}
-              </div>
+                </select>
             </div>
+            {!connectionRestored &&(
+              <p>Please wait...</p>
+            )}
+        </div>
+      </div>
           </div>
         )]}
         {page_n === 1 && (
@@ -301,7 +295,7 @@ function App() {
                     {(!isdeployed || getwalletisloaded() === "false") && (
                       <button className='action-button' onClick={async () => {
                         if (!master_contract_balance) { WebApp.showAlert("You Are Offline , Please reload the page"); return; }
-                        await sendDeployByMaster(Address.parse(referal_address));
+                        await sendDeployByMaster(address(referal_address));
                         setIsdeployed(true);
                       }}>
                         Create Contract
