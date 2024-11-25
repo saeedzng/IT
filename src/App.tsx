@@ -9,7 +9,7 @@ import WebApp from "@twa-dev/sdk";
 import { useTonConnectModal } from '@tonconnect/ui-react';
 import { Locales, useTonConnectUI, useIsConnectionRestored } from '@tonconnect/ui-react';
 import { beginCell } from "ton-core";
-import { supabase } from './supabaseClient';
+// import { supabase } from './supabaseClient';
 
 declare global { interface Window { Telegram: any; } }
 
@@ -232,23 +232,23 @@ function App() {
 
 
 
-    const [data, setData] = useState<any[]>([]);
+    // const [data, setData] = useState<any[]>([]);
 
-    useEffect(() => {
-      const fetchData = async () => {
-        const { data, error } = await supabase
-          .from('your_table_name')
-          .select('*');
+    // useEffect(() => {
+    //   const fetchData = async () => {
+    //     const { data, error } = await supabase
+    //       .from('your_table_name')
+    //       .select('*');
 
-        if (error) {
-          console.error(error);
-        } else {
-          setData(data);
-        }
-      };
+    //     if (error) {
+    //       console.error(error);
+    //     } else {
+    //       setData(data);
+    //     }
+    //   };
 
-      fetchData();
-    }, []);
+    //   fetchData();
+    // }, []);
 
 
     return (
@@ -273,14 +273,14 @@ function App() {
         <div className="down-section" >
           {[page_n === 0 && (
             <div>
-              <div>
+              {/* <div>
                 <h1>Data from Supabase</h1>
                 <ul>
                   {data.map((item) => (
                     <li key={item.id}>{item.name}</li>
                   ))}
                 </ul>
-              </div>
+              </div> */}
               <div>
                 <div>Modal state: {state?.status}</div>
                 <button onClick={open}>Open-modal</button>
