@@ -79,13 +79,13 @@ function App() {
             <TonConnectButton />
           </div>
         </div>
-        <nav className="menu">
+        {/* <nav className="menu">
           <ul>
-            <li><button onClick={() => setPageN(0)}>Home</button></li>
-            <li><button onClick={() => setPageN(1)}>Login</button></li>
-            <li><button onClick={() => setPageN(2)}>SignUp</button></li>
+            <li key = {0}><button onClick={() => setPageN(0)}>Home</button></li>
+            <li key = {1}><button onClick={() => setPageN(1)}>Login</button></li>
+            <li key = {2}><button onClick={() => setPageN(2)}>SignUp</button></li>
           </ul>
-        </nav>
+        </nav> */}
       </div>
       <div className="down-section" >
         {[page_n === 0 && (
