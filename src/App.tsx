@@ -4,9 +4,7 @@ import { supabase } from './supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { TonConnectButton } from "@tonconnect/ui-react";
 
-
 function App() {
-
   const [user, setUser] = useState<User | null>(null);
   const [page_n, setPageN] = useState(Number(0));
   const [email, setEmail] = useState('');
@@ -67,9 +65,6 @@ function App() {
       console.log('Signed out successfully!');
     }
   };
-  console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
-console.log('Supabase API Key:', import.meta.env.VITE_SUPABASE_API_KEY);
-
 
   return (
     <div className="wrapper">
@@ -84,14 +79,14 @@ console.log('Supabase API Key:', import.meta.env.VITE_SUPABASE_API_KEY);
         </div>
         {/* <nav className="menu">
           <ul>
-            <li key = {0}><button onClick={() => setPageN(0)}>Home</button></li>
-            <li key = {1}><button onClick={() => setPageN(1)}>Login</button></li>
-            <li key = {2}><button onClick={() => setPageN(2)}>SignUp</button></li>
+            <li key={0}><button onClick={() => setPageN(0)}>Home</button></li>
+            <li key={1}><button onClick={() => setPageN(1)}>Login</button></li>
+            <li key={2}><button onClick={() => setPageN(2)}>SignUp</button></li>
           </ul>
         </nav> */}
       </div>
-      <div className="down-section" >
-        {[page_n === 0 && (
+      <div className="down-section">
+        {page_n === 0 && (
           <div>
             <h3>Home</h3>
             {user ? (
@@ -102,71 +97,70 @@ console.log('Supabase API Key:', import.meta.env.VITE_SUPABASE_API_KEY);
             ) : (
               <div>
                 <p>Please log in</p>
-                <button onClick={() =>setPageN(1)}>Log in</button>
+                <button onClick={() => setPageN(1)}>Log in</button>
                 <br />
-                <button onClick={() =>setPageN(2)}>Sign up</button>
+                <button onClick={() => setPageN(2)}>Sign up</button>
               </div>
             )}
           </div>
-        )]}
-        {[page_n === 1 && (
+        )}
+        {page_n === 1 && (
+          <div>
+            <h2>Login</h2>
+            <form onSubmit={handleLogin}>
               <div>
-              <h2>Login</h2>
-              <form onSubmit={handleLogin}>
-                <div>
-                  <label>Email:</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label>Password:</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-                <button type="submit">Login</button>
-              </form>
-            </div>
-        )] }
-        {[ page_n === 2 && (
+                <label>Email:</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
               <div>
-              <h2>Sign Up</h2>
-              <form onSubmit={handleSignUp}>
-                <div>
-                  <label>Email:</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label>Password:</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-                <button type="submit">Sign Up</button>
-              </form>
-            </div>
-        )]}
+                <label>Password:</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {error && <p style={{ color: 'red' }}>{error}</p>}
+              <button type="submit">Login</button>
+            </form>
+          </div>
+        )}
+        {page_n === 2 && (
+          <div>
+            <h2>Sign Up</h2>
+            <form onSubmit={handleSignUp}>
+              <div>
+                <label>Email:</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div>
+                <label>Password:</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              {error && <p style={{ color: 'red' }}>{error}</p>}
+              <button type="submit">Sign Up</button>
+            </form>
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
 
 export default App;

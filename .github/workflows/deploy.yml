@@ -21,11 +21,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Verify environment variables
-        run: |
-          echo "VITE_SUPABASE_URL=${{ secrets.SUPABASE_URL }}"
-          echo "VITE_SUPABASE_API_KEY=${{ secrets.SUPABASE_API_KEY }}"
-
       - name: Build project
         env:
           VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
