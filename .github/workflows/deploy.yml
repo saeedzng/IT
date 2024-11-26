@@ -19,9 +19,6 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build project
-        env: 
-        VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }} 
-        VITE_SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY
         run: npm run build
       - name: Upload production-ready build files
         uses: actions/upload-artifact@v3
