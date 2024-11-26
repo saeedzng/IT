@@ -315,6 +315,53 @@ body {
   margin-bottom: 10px;
 }
 
+/* General Styles */
+.form-container {
+  background: rgba(255, 255, 255, 0.1); /* Semi-transparent background */
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  margin: auto;
+  max-width: 400px; /* Limit width for better readability */
+}
+
+/* Input Fields */
+input[type="email"], input[type="password"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-color);
+}
+
+input[type="email"]:focus, input[type="password"]:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Buttons */
+button[type="submit"] {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--bg-button);
+  color: var(--text-color);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button[type="submit"]:hover {
+  background-color: var(--hover-color);
+}
+
+/* Error Message */
+.error-message {
+  color: red;
+}
+
+
 @media (max-width: 768px) {
   #root {
     font-size: 5vw;
@@ -355,4 +402,9 @@ body {
   .action-button {
     font-size: 14px;
   }
+
+  .form-container {
+    padding: 15px; /* Adjust padding for smaller screens */
+  }
+
 }

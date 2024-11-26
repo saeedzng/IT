@@ -105,58 +105,58 @@ function App() {
           </div>
         )}
         {page_n === 1 && (
-          <div>
-            <h2>Login</h2>
-            <form onSubmit={handleLogin}>
-              <div>
-                <label>Email:</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label>Password:</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              {error && <p style={{ color: 'red' }}>{error}</p>}
-              <button type="submit">Login</button>
-            </form>
-          </div>
+           <div className="form-container">
+           <h2>Login</h2>
+           <form onSubmit={handleLogin}>
+             <div>
+               <label>Email:</label>
+               <input
+                 type="email"
+                 value={email}
+                 onChange={(e) => setEmail(e.target.value)}
+                 required
+               />
+             </div>
+             <div>
+               <label>Password:</label>
+               <input
+                 type="password"
+                 value={password}
+                 onChange={(e) => setPassword(e.target.value)}
+                 required
+               />
+             </div>
+             {error && <p className="error-message">{error}</p>}
+             <button type="submit">Login</button>
+           </form>
+         </div>
         )}
         {page_n === 2 && (
-          <div>
-            <h2>Sign Up</h2>
-            <form onSubmit={handleSignUp}>
-              <div>
-                <label>Email:</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div>
-                <label>Password:</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              {error && <p style={{ color: 'red' }}>{error}</p>}
-              <button type="submit">Sign Up</button>
-            </form>
-          </div>
+          <div className="form-container">
+          <h2>Sign Up</h2>
+          <form onSubmit={handleSignUp}>
+            <div>
+              <label>Email:</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Password:</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            {error && <p className="error-message">{error}</p>}
+            <button type="submit">Sign Up</button>
+          </form>
+        </div>
         )}
       </div>
     </div>
