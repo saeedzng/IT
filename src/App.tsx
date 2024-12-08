@@ -3,9 +3,10 @@ import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { TonConnectButton } from "@tonconnect/ui-react";
-import { useTonConnect } from "./hooks/useTonConnect";
-import { Address  } from "ton-core";
-
+import { useTonConnectUI } from '@tonconnect/ui-react';
+import WebApp from "@twa-dev/sdk";
+// import {extractTransactionDetails} from "./translateResult"
+declare global { interface Window { Telegram: any; } }
 
 
 
@@ -15,60 +16,90 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const { connected, sender } = useTonConnect();
+  const [tonConnectUI] = useTonConnectUI();
+  const [transactionResult, setTransactionResult] = useState<Object | null>(null);
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [haverow, setHaverow] = useState(false);
+  const [referal_address, setReferal_address] = useState("");
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
 
 
-
-
-
-
- const handleSendTransaction = async () => {
-  if (!connected) {
-    console.log("Not connected to TonConnect.");
-    return;
-  }
-
-  try {
-    await sender.send({
-      to: Address.parse("0QDbP6nFnSSS1dk9EHL5G_bYG0cIqPBwv1eje7uOGiVZcno8"),
-      value: BigInt(80000) ,
-    });
-
-    // Assuming you have a way to get the transaction ID or hash
-    const transactionId = "some-transaction-id"; // Replace with actual logic to get ID
-
-    // Check if the transaction is confirmed
-    const isConfirmed = await checkTransactionStatus(transactionId);
-    
-    if (isConfirmed) {
-      console.log("Transaction confirmed successfully!");
-    } else {
-      console.log("Transaction not confirmed.");
+  useEffect(() => {
+    const ReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
+    if (ReferalAddressFromUrl) {
+      setReferal_address(ReferalAddressFromUrl);
     }
-  } catch (error) {
-    console.error("Error during transaction:", error);
-  }
-};
+  }, []);
 
-// Example function to check transaction status
-async function checkTransactionStatus(transactionId: string): Promise<boolean> {
-  // Implement your logic here to query the blockchain for transaction status
-  // This could involve calling an API or using a library that interacts with the blockchain
-  // For example:
-  
-  try {
-    const response = await fetch(`https://api.yourblockchain.com/transaction/${transactionId}`);
-    const data = await response.json();
-    
-    return data.status === 'confirmed'; // Adjust based on actual response structure
-  } catch (error) {
-    console.error("Error checking transaction status:", error);
-    return false; // Return false if there's an error checking status
-  }
-}
+  const handleShare = () => {
+    if (!user) {
+      WebApp.showAlert("You Must Sign In");
+      return;
+    }
+    if (haverow) {
+      WebApp.showAlert("You Must Buy a Product First.");
+      return;
+    }
+    const telegramShareUrl = `https://t.me/M_tg25bot/TestApp?startapp=${user.email}`;
+    if (navigator.share) {
+      navigator.share({
+        title: 'Chicken Farm ',
+        text: 'Send it to share',
+        url: telegramShareUrl,
+      })
+    } else {
+      showFallback(telegramShareUrl);
+    }
+  };
+  const showFallback = (url: string) => {
+    setShareUrl(url);
+    setShowShareDialog(true);
+  };
+  const copyToClipboard = () => {
+    const tempTextarea = document.createElement("textarea");
+    tempTextarea.value = shareUrl;
+    document.body.appendChild(tempTextarea);
+    tempTextarea.select(); document.execCommand("copy");
+    document.body.removeChild(tempTextarea);
+    WebApp.showAlert("Link copied to clipboard!");
+  };
+  const closeShareDialog = () => {
+    setShowShareDialog(false);
+  };
 
-  
 
+
+
+
+
+
+
+
+
+  const handleSendTransaction = async () => {
+    try {
+      const result = await tonConnectUI.sendTransaction({
+        validUntil: Date.now() + 5 * 60 * 1000,
+        messages: [
+          {
+            address: "0QDbP6nFnSSS1dk9EHL5G_bYG0cIqPBwv1eje7uOGiVZcno8",
+            amount: "10000000"
+          }
+        ]
+      });
+      setTransactionResult(result);
+    } catch (error) {
+      console.error("Transaction failed:", error);
+    }
+  };
+  useEffect(() => {
+    if (transactionResult !== null) {
+      console.log("MYCode : Confrim");
+      handleChange();
+    }
+  }, [transactionResult]);
 
 
   useEffect(() => {
@@ -81,11 +112,9 @@ async function checkTransactionStatus(transactionId: string): Promise<boolean> {
       }
     };
     getUser();
-
     const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
     });
-
     return () => {
       authListener.subscription.unsubscribe();
     };
@@ -132,7 +161,7 @@ async function checkTransactionStatus(transactionId: string): Promise<boolean> {
     }
     const { error } = await supabase
       .from('Users')
-      .insert([{ OwnerAddress: user.email, ReferalID: 111111, LeftID: 111111, RightID: 111111 }]);
+      .insert([{ OwnerAddress: user.email, ReferalAddress: "111111", LeftID: 1, RightID: 2 }]);
 
     if (error) {
       console.error('Error creating row:', error);
@@ -142,13 +171,26 @@ async function checkTransactionStatus(transactionId: string): Promise<boolean> {
   };
 
   const handleChange = async () => {
-    let currentEmail: string | null = 'saeed.zng@gmail.com';
-    let referalAddress: string | null = null;
+    if (!user) {
+      console.error('User not logged in');
+      return;
+    }
+    const { error } = await supabase
+      .from('Users')
+      .insert([{ OwnerAddress: user.email, ReferalAddress: referal_address }]);
 
+    if (error) {
+      console.error('Error creating row:', error);
+    } else {
+      console.log('Row created successfully');
+      setHaverow(true)
+    }
+    let ownerAddress: string | null = 'saeed.zng@gmail.com';
+    let referalAddress: string | null;
     const { data: referalData, error: referalError } = await supabase
       .from('Users')
       .select('ReferalAddress')
-      .eq('OwnerAddress', currentEmail)
+      .eq('OwnerAddress', ownerAddress)
       .single();
 
     if (referalError) {
@@ -159,7 +201,7 @@ async function checkTransactionStatus(transactionId: string): Promise<boolean> {
     while (referalAddress) {
       const { data, error } = await supabase
         .from('Users')
-        .select('RightPoint, ReferalAddress')
+        .select('RightPoint , RightID , LeftPoint , LeftID , ReferalAddress , OwnerAddress')
         .eq('OwnerAddress', referalAddress)
         .single();
 
@@ -168,30 +210,35 @@ async function checkTransactionStatus(transactionId: string): Promise<boolean> {
         return;
       }
       const currentRightPoint: number = data.RightPoint;
+      const currentLeftPoint: number = data.LeftPoint;
+      const rightID: string = data.RightID;
+      const leftID: string = data.LeftID;
       const nextReferalAddress: string | null = data.ReferalAddress;
+      const nextOwnerAddress: string | null = data.OwnerAddress;
+      let feutureRightPoint = currentRightPoint;
+      let feutureLeftPoint = currentLeftPoint;
+      if (ownerAddress === rightID) {
+        feutureRightPoint = currentRightPoint + 1;
+      }
+      if (ownerAddress === leftID) {
+        feutureLeftPoint = currentLeftPoint + 1;
+      }
       const { error: updateError } = await supabase
         .from('Users')
-        .update({ RightPoint: currentRightPoint + 1 })
+        .update({ RightPoint: feutureRightPoint, LeftPoint: feutureLeftPoint })
         .eq('OwnerAddress', referalAddress);
 
       if (updateError) {
         console.error('Error updating RightPoint:', updateError);
         return;
       } else {
-        console.log(`RightPoint for ${referalAddress} updated successfully`);
+        console.log(`Point for ${referalAddress} updated successfully`);
       }
       referalAddress = nextReferalAddress;
+      ownerAddress = nextOwnerAddress;
     }
   };
 
-
-
-
-
-
-
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   useEffect(() => {
     const fetchData = async () => {
       const { data, error } = await supabase
@@ -244,6 +291,22 @@ async function checkTransactionStatus(transactionId: string): Promise<boolean> {
                 <button onClick={handleBuy}>BUY</button>
                 <button onClick={handleChange}>CHANGE</button>
                 <button onClick={handleSendTransaction}>TRANSFER 1 TON</button>
+                {/* <button onClick={ extract }>extract</button> */}
+                <button className="action-button" onClick={handleShare}>Share Referal</button>
+                {/* Share Dialog */}
+                {showShareDialog && (
+                  <div className="dialog-overlay">
+                    <div className="dialog-content">
+                      <h2>Your browser does not support sharing.</h2>
+                      <p>Please copy the link below and share it manually:</p>
+                      <label>{shareUrl}</label>
+                      <div className="dialog-buttons">
+                        <button onClick={copyToClipboard}>Copy Link</button>
+                        <button onClick={closeShareDialog}>Close</button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               </div>
             ) : (
@@ -252,6 +315,7 @@ async function checkTransactionStatus(transactionId: string): Promise<boolean> {
                 <button onClick={() => setPageN(1)}>Log in</button>
                 <br />
                 <button onClick={() => setPageN(2)}>Sign up</button>
+
               </div>
             )}
           </div>

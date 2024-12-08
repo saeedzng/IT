@@ -12,8 +12,11 @@
   "dependencies": {
     "@orbs-network/ton-access": "^2.3.3",
     "@supabase/supabase-js": "^2.46.2",
+    "@ton/core": "^0.59.0",
+    "@ton/crypto": "^3.3.0",
     "@tonconnect/ui-react": "^2.0.9",
     "@twa-dev/sdk": "^8.0.1",
+    "@types/node": "^22.10.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "ton": "^13.9.0",
