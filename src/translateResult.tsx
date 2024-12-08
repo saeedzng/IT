@@ -1,4 +1,4 @@
-import { Cell, Slice, Address } from 'ton';
+import { Cell, Address } from 'ton';
 
 export function extractTransactionDetails(response: { result: string; id: number }) {
     const boc = response.result; // Extract BOC string from the response object
