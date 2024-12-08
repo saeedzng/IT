@@ -42,7 +42,7 @@ function App() {
       WebApp.showAlert("You Must Buy a Product First.");
       return;
     }
-    const telegramShareUrl ="'" + `https://t.me/M_tg25bot/TestApp?startapp=${user.email}` + "'";
+    const telegramShareUrl ='https://t.me/M_tg25bot/TestApp?startapp=' + "'" + user.email + "'" ;
     if (navigator.share) {
       navigator.share({
         title: 'Chicken Farm ',
