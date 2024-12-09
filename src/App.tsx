@@ -26,12 +26,16 @@ function App() {
   const [shareUrl, setShareUrl] = useState("");
 
 
-  useEffect(() => {
-    const ReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
-    if (ReferalAddressFromUrl) {
-      setReferal_address(ReferalAddressFromUrl);
-    }
-  }, []);
+  
+    useEffect(() => {
+      const encodedReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
+      if (encodedReferalAddressFromUrl) {
+        const decodedReferalAddress = decodeURIComponent(encodedReferalAddressFromUrl);
+        setReferal_address(decodedReferalAddress);
+      }
+    }, []);
+
+  
 
   const handleShare = () => {
     if (!user) {
@@ -42,7 +46,8 @@ function App() {
       WebApp.showAlert("You Must Buy a Product First.");
       return;
     }
-    const telegramShareUrl ='https://t.me/M_tg25bot/TestApp?startapp=' + "'" + user.email + "'" ;
+    const encodedEmail = encodeURIComponent(user.email!);
+    const telegramShareUrl = `https://t.me/M_tg25bot/TestApp?startapp=${encodedEmail}`;
     if (navigator.share) {
       navigator.share({
         title: 'Chicken Farm ',
