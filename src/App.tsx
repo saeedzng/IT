@@ -26,14 +26,15 @@ function App() {
   const [shareUrl, setShareUrl] = useState("");
 
 
-  
-  useEffect(() => { 
-    const ReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param; 
-    if (ReferalAddressFromUrl) { 
-      setReferal_address(ReferalAddressFromUrl); 
-    } }, []);
 
-  
+  useEffect(() => {
+    const ReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
+    if (ReferalAddressFromUrl) {
+      setReferal_address(ReferalAddressFromUrl);
+    }
+  }, []);
+
+
 
   const handleShare = async () => {
     if (!user) {
@@ -44,34 +45,30 @@ function App() {
       WebApp.showAlert("You Must Buy a Product First.");
       return;
     }
-      const { data, error } = await supabase
+    const { data, error } = await supabase
       .from('Users')
       .select('id')
       .eq('OwnerAddress', user.email)
       .single();
-      if (data){
-        const telegramShareUrl = `https://t.me/M_tg25bot/TestApp?startapp=${data.id}`;
-        if (navigator.share) {
-          navigator.share({
-            title: 'Chicken Farm ',
-            text: 'Send it to share',
-            url: telegramShareUrl,
-          })
-        } else {
-          showFallback(telegramShareUrl);
-        }
-      };
-      if (error) {
-        WebApp.showAlert('Error :' + error);
+    if (data) {
+      const telegramShareUrl = `https://t.me/M_tg25bot/TestApp?startapp=${data.id}`;
+      if (navigator.share) {
+        navigator.share({
+          title: 'Chicken Farm ',
+          text: 'Send it to share',
+          url: telegramShareUrl,
+        })
       } else {
-        console.log('share successfully');
+        showFallback(telegramShareUrl);
       }
-
+    };
+    if (error) {
+      WebApp.showAlert('Error :' + error);
+    } else {
+      console.log('share successfully');
     }
-    
 
-   
-
+  }
   const showFallback = (url: string) => {
     setShareUrl(url);
     setShowShareDialog(true);
@@ -87,15 +84,6 @@ function App() {
   const closeShareDialog = () => {
     setShowShareDialog(false);
   };
-
-
-
-
-
-
-
-
-
 
   const handleSendTransaction = async () => {
     try {
@@ -194,9 +182,19 @@ function App() {
       console.error('User not logged in');
       return;
     }
+    const {data : myEmailShapeReferalAddress , error :myerror} = await supabase
+    .from('Users')
+    .select('OwnerAddress')
+    .eq('id', referal_address)
+    .single();
+    const emailShapeReferalAddress = myEmailShapeReferalAddress?.OwnerAddress
+    if (myerror) {
+      console.error('Error fetching ReferalAddress:', myerror);
+      return;
+    }
     const { error } = await supabase
       .from('Users')
-      .insert([{ OwnerAddress: user.email, ReferalAddress: referal_address }]);
+      .insert([{ OwnerAddress: user.email, ReferalAddress: emailShapeReferalAddress }]);
 
     if (error) {
       console.error('Error creating row:', error);
