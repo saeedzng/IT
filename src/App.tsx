@@ -27,17 +27,15 @@ function App() {
 
 
   
-    useEffect(() => {
-      const encodedReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
-      if (encodedReferalAddressFromUrl) {
-        const decodedReferalAddress = decodeURIComponent(encodedReferalAddressFromUrl);
-        setReferal_address(decodedReferalAddress);
-      }
-    }, []);
+  useEffect(() => { 
+    const ReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param; 
+    if (ReferalAddressFromUrl) { 
+      setReferal_address(ReferalAddressFromUrl); 
+    } }, []);
 
   
 
-  const handleShare = () => {
+  const handleShare = async () => {
     if (!user) {
       WebApp.showAlert("You Must Sign In");
       return;
@@ -46,18 +44,34 @@ function App() {
       WebApp.showAlert("You Must Buy a Product First.");
       return;
     }
-    const encodedEmail = encodeURIComponent(user.email!.replace(/\./g, '%2E').replace(/@/g, '%40'));
-    const telegramShareUrl = `https://t.me/M_tg25bot/TestApp?startapp=${encodedEmail}`;
-    if (navigator.share) {
-      navigator.share({
-        title: 'Chicken Farm ',
-        text: 'Send it to share',
-        url: telegramShareUrl,
-      })
-    } else {
-      showFallback(telegramShareUrl);
+      const { data, error } = await supabase
+      .from('Users')
+      .select('id')
+      .eq('OwnerAddress', user.email)
+      .single();
+      if (data){
+        const telegramShareUrl = `https://t.me/M_tg25bot/TestApp?startapp=${data.id}`;
+        if (navigator.share) {
+          navigator.share({
+            title: 'Chicken Farm ',
+            text: 'Send it to share',
+            url: telegramShareUrl,
+          })
+        } else {
+          showFallback(telegramShareUrl);
+        }
+      };
+      if (error) {
+        WebApp.showAlert('Error :' + error);
+      } else {
+        console.log('share successfully');
+      }
+
     }
-  };
+    
+
+   
+
   const showFallback = (url: string) => {
     setShareUrl(url);
     setShowShareDialog(true);
