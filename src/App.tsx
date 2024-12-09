@@ -46,7 +46,7 @@ function App() {
       WebApp.showAlert("You Must Buy a Product First.");
       return;
     }
-    const encodedEmail = encodeURIComponent(user.email!);
+    const encodedEmail = encodeURIComponent(email.replace(/\./g, '%2E').replace(/@/g, '%40'));
     const telegramShareUrl = `https://t.me/M_tg25bot/TestApp?startapp=${encodedEmail}`;
     if (navigator.share) {
       navigator.share({
