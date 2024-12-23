@@ -5,6 +5,7 @@ import { User } from '@supabase/supabase-js';
 import { TonConnectButton } from "@tonconnect/ui-react";
 import { useTonConnectUI } from '@tonconnect/ui-react';
 import WebApp from "@twa-dev/sdk";
+import { Address, beginCell } from "ton-core";
 // import {extractTransactionDetails} from "./translateResult"
 declare global { interface Window { Telegram: any; } }
 
@@ -67,7 +68,6 @@ function App() {
     } else {
       console.log('share successfully');
     }
-
   }
   const showFallback = (url: string) => {
     setShareUrl(url);
@@ -84,6 +84,134 @@ function App() {
   const closeShareDialog = () => {
     setShowShareDialog(false);
   };
+
+
+
+
+
+
+
+
+
+
+
+  const updateShareRateInMaster = async () => {
+    try {
+      // Fetch all users and calculate the total sum of Points
+      const { data: totalPointsResult, error: totalPointsError } = await supabase
+        .from('Users')
+        .select('Points');
+      if (totalPointsError) {
+        throw new Error(`Error fetching total points: ${totalPointsError.message}`);
+      }
+      // Calculate the total sum of Points
+      const totalPoints = totalPointsResult.reduce((acc, user) => acc + user.Points, 0);
+      let share_data_cell = beginCell()
+        .storeUint(2, 32)
+        .storeUint(totalPoints, 32)
+        .endCell();
+      const result = await tonConnectUI.sendTransaction({
+        validUntil: Date.now() + 5 * 60 * 1000,
+        messages: [
+          {
+            address: "EQDyWf37qCDELuFMGIAdgQkrg4Z5lclgvEddBISOktGc0K1J",
+            amount: "10000000",
+            payload: share_data_cell.toBoc().toString("base64"),
+          }
+        ]
+      });
+      if (result) {
+        WebApp.showAlert("ShareRate updated successfully")
+      }
+    } catch (error) {
+      console.error("Transaction failed:", error);
+    }
+  };
+
+
+
+
+
+  async function handleSendPaybackOrder() {
+    try {
+      // Fetch the first three users with Points greater than zero
+      const { data: users, error: fetchError } = await supabase
+        .from('Users')
+        .select('TonAddress, Points')
+        .gt('Points', 0)
+        .limit(3);
+
+      if (fetchError) {
+        throw new Error(`Error fetching users: ${fetchError.message}`);
+      }
+
+      // Create user array
+      const userArray = users.map(user => ({
+        TonAddress: user.TonAddress,
+        Points: user.Points
+      }));
+
+      // Create the datacell for the current batch
+      let datacellBuilder = beginCell()
+        .storeUint(3, 32)
+        .storeUint(userArray.length, 32); // Number of users in the current batch
+
+      // Add each user's address and points to the datacell
+      userArray.forEach(user => {
+        datacellBuilder
+          .storeAddress(Address.parse(user.TonAddress))
+          .storeCoins(user.Points);
+      });
+
+      const datacell = datacellBuilder.endCell();
+
+      try {
+        const result = await tonConnectUI.sendTransaction({
+          validUntil: Date.now() + 5 * 60 * 1000,
+          messages: [
+            {
+              address: "EQDyWf37qCDELuFMGIAdgQkrg4Z5lclgvEddBISOktGc0K1J",
+              amount: "10000000",
+              payload: datacell.toBoc().toString("base64"),
+            }
+          ]
+        });
+
+        if (result) {
+          // Set Points to zero for the current batch of users
+          const { error: updateError } = await supabase
+            .from('Users')
+            .update({ Points: 0 })
+            .in('TonAddress', users.map(user => user.TonAddress));
+
+          if (updateError) {
+            throw new Error(`Error updating users: ${updateError.message}`);
+          }
+        }
+      } catch (error) {
+        console.error('Error sending transaction:', error);
+      }
+
+      // Return the user array and total points
+      // return { userArray, sumP };
+
+    } catch (error) {
+      console.error('Error processing user points:', error);
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   const handleSendTransaction = async () => {
     try {
@@ -104,7 +232,7 @@ function App() {
   useEffect(() => {
     if (transactionResult !== null) {
       console.log("MYCode : Confrim");
-      handleChange();
+      handleBuyPointForUppers();
     }
   }, [transactionResult]);
 
@@ -161,32 +289,51 @@ function App() {
     }
   };
 
-  const handleBuy = async () => {
-    if (!user) {
-      console.error('User not logged in');
-      return;
+  async function updateUsersPoints() {
+    try {
+      // Fetch all users
+      const { data: users, error: fetchError } = await supabase
+        .from('Users')
+        .select('id, RightPoint, LeftPoint');
+
+      if (fetchError) {
+        throw new Error(`Error fetching users: ${fetchError.message}`);
+      }
+
+      // Iterate over each user and update points
+      for (const user of users) {
+        const { id, RightPoint, LeftPoint } = user;
+        const maxPoint = Math.min(RightPoint, LeftPoint);
+
+        // Update the user's points
+        const { error: updateError } = await supabase
+          .from('Users')
+          .update({
+            Points: maxPoint,
+            RightPoint: 0,
+            LeftPoint: 0
+          })
+          .eq('id', id);
+
+        if (updateError) {
+          console.error(`Error updating user with id ${id}: ${updateError.message}`);
+        }
+      }
+
+      console.log('Users points updated successfully');
+    } catch (error) {
+      console.error('Error updating users points:', error);
     }
-    const { error } = await supabase
+  }
+
+
+
+  const handleCreateNewRowInUserstbl = async () => {
+    const { data: myEmailShapeReferalAddress, error: myerror } = await supabase
       .from('Users')
-      .insert([{ OwnerAddress: user.email, ReferalAddress: "111111", LeftID: 1, RightID: 2 }]);
-
-    if (error) {
-      console.error('Error creating row:', error);
-    } else {
-      console.log('Row created successfully');
-    }
-  };
-
-  const handleChange = async () => {
-    if (!user) {
-      console.error('User not logged in');
-      return;
-    }
-    const {data : myEmailShapeReferalAddress , error :myerror} = await supabase
-    .from('Users')
-    .select('OwnerAddress')
-    .eq('id', referal_address)
-    .single();
+      .select('OwnerAddress')
+      .eq('id', referal_address)
+      .single();
     const emailShapeReferalAddress = myEmailShapeReferalAddress?.OwnerAddress
     if (myerror) {
       console.error('Error fetching ReferalAddress:', myerror);
@@ -194,7 +341,7 @@ function App() {
     }
     const { error } = await supabase
       .from('Users')
-      .insert([{ OwnerAddress: user.email, ReferalAddress: emailShapeReferalAddress }]);
+      .insert([{ OwnerAddress: user!.email, ReferalAddress: emailShapeReferalAddress }]);
 
     if (error) {
       console.error('Error creating row:', error);
@@ -202,6 +349,17 @@ function App() {
       console.log('Row created successfully');
       setHaverow(true)
     }
+  };
+
+  const handleBuyPointForUppers = async () => {
+    if (!user) {
+      console.error('User not logged in');
+      return;
+    }
+    if (!haverow) {
+      handleCreateNewRowInUserstbl();
+    }
+
     let ownerAddress: string | null = 'saeed.zng@gmail.com';
     let referalAddress: string | null;
     const { data: referalData, error: referalError } = await supabase
@@ -290,7 +448,7 @@ function App() {
           <ul>
             <li key={0}><button onClick={() => setPageN(0)}>Home</button></li>
             <li key={1}><button onClick={() => setPageN(1)}>Login</button></li>
-            <li key={2}><button onClick={() => setPageN(2)}>SignUp</button></li>
+            <li key={1}><button onClick={() => setPageN(3)}>Admin</button></li>
           </ul>
         </nav>
       </div>
@@ -305,10 +463,7 @@ function App() {
                   <h4>Data from Supabase</h4>
                   <ul> {data.map((row) => (<li key={row.id}>{row.OwnerAddress}</li>))} </ul>
                 </div>
-                <button onClick={handleBuy}>BUY</button>
-                <button onClick={handleChange}>CHANGE</button>
-                <button onClick={handleSendTransaction}>TRANSFER 1 TON</button>
-                {/* <button onClick={ extract }>extract</button> */}
+                <button className="action-button" onClick={handleSendTransaction}>Buy Product</button>
                 <button className="action-button" onClick={handleShare}>Share Referal</button>
                 {/* Share Dialog */}
                 {showShareDialog && (
@@ -342,7 +497,7 @@ function App() {
             <h2>Login</h2>
             {user ? (
               <div>
-                <p>Logged In :, {user.email}</p>
+                <p>Logged In: {user.email}</p>
                 <button onClick={handleSignOut}>Sign Out</button>
               </div>
             ) : (
@@ -369,8 +524,15 @@ function App() {
                 <button type="submit">Login</button>
               </form>
             )}
+
+            {/* Link to Sign Up Section */}
+            <p>
+              I don't have an account?
+              <a href="#sign-up" onClick={() => setPageN(2)}> Sign Up</a>
+            </p>
           </div>
         )}
+
         {page_n === 2 && (
           <div className="form-container">
             <h2>Sign Up</h2>
@@ -396,8 +558,23 @@ function App() {
               {error && <p className="error-message">{error}</p>}
               <button type="submit">Sign Up</button>
             </form>
+
+            {/* Link to Login Section */}
+            <p>
+              Already have an account?
+              <a href="#login" onClick={() => setPageN(1)}> Login</a>
+            </p>
           </div>
         )}
+                {page_n === 3 && (
+          <div >
+                <button className="action-button" onClick={handleBuyPointForUppers}>Give buy points to uppers</button>
+                <button className="action-button" onClick={updateUsersPoints}>Convert buypoints to real Points</button>
+                <button className="action-button" onClick={handleSendPaybackOrder}>Payback</button>
+                <button className="action-button" onClick={updateShareRateInMaster}>Update share rate in master</button>
+          </div>
+        )}
+
       </div>
     </div>
   );
