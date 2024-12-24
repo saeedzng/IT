@@ -34,6 +34,7 @@ function App() {
     const ReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
     if (ReferalAddressFromUrl) {
       setReferal_address(ReferalAddressFromUrl);
+      // console.log("referal address = " + ReferalAddressFromUrl)
     }
   }, []);
 
@@ -233,7 +234,7 @@ function App() {
   };
   useEffect(() => {
     if (transactionResult !== null) {
-      console.log("MYCode : Confrim");
+      console.log("Transactin Confrimed");
       handleBuyPointForUppers();
     }
   }, [transactionResult]);
@@ -323,14 +324,30 @@ function App() {
   };
 
   const handleSignOut = async () => {
+    // Fetch the current session
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+        console.error('Error fetching session:', sessionError.message);
+        return;
+    }
+
+    // Check if there is an active session
+    if (!sessionData?.session) {
+        console.error('No active session found!');
+        return;
+    }
+
+    // Proceed to sign out if there is an active session
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error('Error signing out:', error.message);
+        console.error('Error signing out:', error.message);
     } else {
-      setUser(null);
-      console.log('Signed out successfully!');
+        setUser(null);
+        console.log('Signed out successfully!');
     }
-  };
+};
+
 
   async function updateUsersPoints() {
     try {
@@ -369,25 +386,18 @@ function App() {
     }
   }
 
-  const findEmailShapeReferalAddress = async () => {
-    const { data: myEmailShapeReferalAddress, error: myerror } = await supabase
-    .from('Users')
-    .select('OwnerAddress')
-    .eq('id', referal_address)
-    .single();
-  
-  if (myerror) {
-    console.error('Error fetching ReferalAddress:', myerror);
-    return;
-  }
-  return myEmailShapeReferalAddress?.OwnerAddress
-  }
-
 
   const handleCreateNewRowInUserstbl = async () => {
-    const emailShapeReferalAddress = findEmailShapeReferalAddress();
-    if (!emailShapeReferalAddress){
-      console.log("Error get email shape referal address");
+    const { data: myEmailShapeReferalAddress, error: myerror } = await supabase
+      .from('Users')
+      .select('OwnerAddress')
+      .eq('id', referal_address)
+      .single();
+      console.log("1" + referal_address)
+    const emailShapeReferalAddress = myEmailShapeReferalAddress?.OwnerAddress
+    console.log("2" + emailShapeReferalAddress)
+    if (myerror) {
+      console.error('Error fetching ReferalAddress:', myerror);
       return;
     }
     const { error } = await supabase
