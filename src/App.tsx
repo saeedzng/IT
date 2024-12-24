@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { TonConnectButton } from "@tonconnect/ui-react";
-import { useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
+import { useTonConnectUI, /* useTonAddress */ } from '@tonconnect/ui-react';
 import WebApp from "@twa-dev/sdk";
 import { Address, beginCell } from "ton-core";
 // import {extractTransactionDetails} from "./translateResult"
