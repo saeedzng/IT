@@ -31,7 +31,7 @@ function App() {
 
 
   useEffect(() => {
-    const ReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
+    const ReferalAddressFromUrl = "1"/*  window.Telegram.WebApp.initDataUnsafe.start_param */;
     if (ReferalAddressFromUrl) {
       setReferal_address(ReferalAddressFromUrl);
       // console.log("referal address = " + ReferalAddressFromUrl)
@@ -402,7 +402,7 @@ function App() {
     }
     const { error } = await supabase
       .from('Users')
-      .insert([{ OwnerAddress: user!.email, ReferalAddress: emailShapeReferalAddress, TonAddress: useTonAddress() }]);
+      .insert([{ OwnerAddress: user!.email, ReferalAddress: emailShapeReferalAddress, TonAddress:/*  useTonAddress() */ "111111" }]);
 
     if (error) {
       console.error('Error creating row:', error);
