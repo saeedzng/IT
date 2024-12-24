@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { TonConnectButton } from "@tonconnect/ui-react";
-import { useTonConnectUI , useTonAddress } from '@tonconnect/ui-react';
+import { useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
 import WebApp from "@twa-dev/sdk";
 import { Address, beginCell } from "ton-core";
 // import {extractTransactionDetails} from "./translateResult"
@@ -12,14 +12,16 @@ declare global { interface Window { Telegram: any; } }
 
 
 function App() {
-  const [user, setUser] = useState<User | null>(null);
   const [page_n, setPageN] = useState(Number(0));
+  const [user, setUser] = useState<User | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [welcomeDisplayName, setWelcomeDisplayName] = useState('Guest');
   const [error, setError] = useState<string | null>(null);
   const [tonConnectUI] = useTonConnectUI();
   const [transactionResult, setTransactionResult] = useState<Object | null>(null);
-  const [data, setData] = useState<any[]>([]);
+  const [tableData, setTableData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [haverow, setHaverow] = useState(false);
   const [referal_address, setReferal_address] = useState("");
@@ -244,20 +246,60 @@ function App() {
         console.error(error);
       } else {
         setUser(data?.session?.user ?? null);
+        if (data?.session?.user) {
+          const displayName = await fetchUserDisplayName(data.session.user);
+          setWelcomeDisplayName(displayName);
+        }
       }
     };
+
     getUser();
+
     const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        const fetchAndSetDisplayName = async () => {
+          const displayName = await fetchUserDisplayName(session.user);
+          setWelcomeDisplayName(displayName);
+        };
+        fetchAndSetDisplayName();
+      }
     });
+
     return () => {
       authListener.subscription.unsubscribe();
     };
   }, []);
 
+  const fetchUserDisplayName = async (user: User) => {
+    try {
+      const displayName = user.user_metadata?.display_name;
+      if (!displayName) {
+        console.error('Display name not found');
+        return 'Guest'; // Default display name
+      }
+      return displayName;
+    } catch (error) {
+      console.error('Error fetching display name:', error);
+      return 'Guest'; // Default display name
+    }
+  };
+
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.auth.signUp({ email, password });
+
+    // Add displayName to the sign-up data
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name: displayName  // Ensure to add displayName in your form data
+        }
+      }
+    });
+
     if (error) {
       setError(error.message);
     } else {
@@ -266,6 +308,7 @@ function App() {
       setPageN(1);
     }
   };
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -326,22 +369,30 @@ function App() {
     }
   }
 
+  const findEmailShapeReferalAddress = async () => {
+    const { data: myEmailShapeReferalAddress, error: myerror } = await supabase
+    .from('Users')
+    .select('OwnerAddress')
+    .eq('id', referal_address)
+    .single();
+  
+  if (myerror) {
+    console.error('Error fetching ReferalAddress:', myerror);
+    return;
+  }
+  return myEmailShapeReferalAddress?.OwnerAddress
+  }
 
 
   const handleCreateNewRowInUserstbl = async () => {
-    const { data: myEmailShapeReferalAddress, error: myerror } = await supabase
-      .from('Users')
-      .select('OwnerAddress')
-      .eq('id', referal_address)
-      .single();
-    const emailShapeReferalAddress = myEmailShapeReferalAddress?.OwnerAddress
-    if (myerror) {
-      console.error('Error fetching ReferalAddress:', myerror);
+    const emailShapeReferalAddress = findEmailShapeReferalAddress();
+    if (!emailShapeReferalAddress){
+      console.log("Error get email shape referal address");
       return;
     }
     const { error } = await supabase
       .from('Users')
-      .insert([{ OwnerAddress: user!.email, ReferalAddress: emailShapeReferalAddress , TonAddress: useTonAddress()  }]);
+      .insert([{ OwnerAddress: user!.email, ReferalAddress: emailShapeReferalAddress, TonAddress: useTonAddress() }]);
 
     if (error) {
       console.error('Error creating row:', error);
@@ -424,7 +475,7 @@ function App() {
       if (error) {
         console.error('Error fetching data:', error);
       } else {
-        setData(data);
+        setTableData(data);
       }
       setLoading(false);
     };
@@ -448,20 +499,19 @@ function App() {
           <ul>
             <li key={0}><button onClick={() => setPageN(0)}>Home</button></li>
             <li key={1}><button onClick={() => setPageN(1)}>Login</button></li>
-            <li key={1}><button onClick={() => setPageN(3)}>Admin</button></li>
+            <li key={2}><button onClick={() => setPageN(3)}>Admin</button></li>
           </ul>
         </nav>
       </div>
       <div className="down-section">
         {page_n === 0 && (
           <div>
-            <h3>Home</h3>
             {user ? (
               <div>
-                <p>Welcome, {user.email}</p>
+                <p>Welcome, {welcomeDisplayName}</p>
                 <div>
                   <h4>Data from Supabase</h4>
-                  <ul> {data.map((row) => (<li key={row.id}>{row.OwnerAddress}</li>))} </ul>
+                  <ul> {tableData.map((row) => (<li key={row.id}>{row.OwnerAddress}</li>))} </ul>
                 </div>
                 <button className="action-button" onClick={handleSendTransaction}>Buy Product</button>
                 <button className="action-button" onClick={handleShare}>Share Referal</button>
@@ -483,11 +533,11 @@ function App() {
               </div>
             ) : (
               <div>
-                <p>Please log in</p>
-                <button onClick={() => setPageN(1)}>Log in</button>
                 <br />
-                <button onClick={() => setPageN(2)}>Sign up</button>
-
+                <br />
+                <br />
+                <br />
+                <button className="action-button" onClick={() => setPageN(1)}>Log in</button>
               </div>
             )}
           </div>
@@ -501,6 +551,7 @@ function App() {
                 <button onClick={handleSignOut}>Sign Out</button>
               </div>
             ) : (
+              <div>
               <form onSubmit={handleLogin}>
                 <div>
                   <label>Email:</label>
@@ -523,13 +574,13 @@ function App() {
                 {error && <p className="error-message">{error}</p>}
                 <button type="submit">Login</button>
               </form>
-            )}
-
-            {/* Link to Sign Up Section */}
-            <p>
+              <p>
               I don't have an account?
               <a href="#sign-up" onClick={() => setPageN(2)}> Sign Up</a>
             </p>
+              </div>
+
+            )}
           </div>
         )}
 
@@ -537,6 +588,15 @@ function App() {
           <div className="form-container">
             <h2>Sign Up</h2>
             <form onSubmit={handleSignUp}>
+              <div>
+                <label>Display Name:</label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  required
+                />
+              </div>
               <div>
                 <label>Email:</label>
                 <input
@@ -565,13 +625,14 @@ function App() {
               <a href="#login" onClick={() => setPageN(1)}> Login</a>
             </p>
           </div>
+
         )}
-                {page_n === 3 && (
+        {page_n === 3 && (
           <div >
-                <button className="action-button" onClick={handleBuyPointForUppers}>Give buy points to uppers</button>
-                <button className="action-button" onClick={updateUsersPoints}>Convert buypoints to real Points</button>
-                <button className="action-button" onClick={handleSendPaybackOrder}>Payback</button>
-                <button className="action-button" onClick={updateShareRateInMaster}>Update share rate in master</button>
+            <button className="action-button" onClick={handleBuyPointForUppers}>Give buy points to uppers</button>
+            <button className="action-button" onClick={updateUsersPoints}>Convert buypoints to real Points</button>
+            <button className="action-button" onClick={handleSendPaybackOrder}>Payback</button>
+            <button className="action-button" onClick={updateShareRateInMaster}>Update share rate in master</button>
           </div>
         )}
 
