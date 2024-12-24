@@ -326,27 +326,27 @@ function App() {
   const handleSignOut = async () => {
     // Fetch the current session
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    
+
     if (sessionError) {
-        console.error('Error fetching session:', sessionError.message);
-        return;
+      console.error('Error fetching session:', sessionError.message);
+      return;
     }
 
     // Check if there is an active session
     if (!sessionData?.session) {
-        console.error('No active session found!');
-        return;
+      console.error('No active session found!');
+      return;
     }
 
     // Proceed to sign out if there is an active session
     const { error } = await supabase.auth.signOut();
     if (error) {
-        console.error('Error signing out:', error.message);
+      console.error('Error signing out:', error.message);
     } else {
-        setUser(null);
-        console.log('Signed out successfully!');
+      setUser(null);
+      console.log('Signed out successfully!');
     }
-};
+  };
 
 
   async function updateUsersPoints() {
@@ -393,7 +393,7 @@ function App() {
       .select('OwnerAddress')
       .eq('id', referal_address)
       .single();
-      console.log("1" + referal_address)
+    console.log("1" + referal_address)
     const emailShapeReferalAddress = myEmailShapeReferalAddress?.OwnerAddress
     console.log("2" + emailShapeReferalAddress)
     if (myerror) {
@@ -521,7 +521,13 @@ function App() {
                 <p>Welcome, {welcomeDisplayName}</p>
                 <div>
                   <h4>Data from Supabase</h4>
-                  <ul> {tableData.map((row) => (<li key={row.id}>{row.OwnerAddress}</li>))} </ul>
+                  <ul>
+                    {tableData.map((row) => (
+                      <li key={row.id}>
+                        Owner Address: {row.OwnerAddress}, Left Point: {row.LeftPoint}, Right Point: {row.RightPoint}, Referal: {row.ReferalAddress}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
                 <button className="action-button" onClick={handleSendTransaction}>Buy Product</button>
                 <button className="action-button" onClick={handleShare}>Share Referal</button>
@@ -562,32 +568,32 @@ function App() {
               </div>
             ) : (
               <div>
-              <form onSubmit={handleLogin}>
-                <div>
-                  <label>Email:</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label>Password:</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                {error && <p className="error-message">{error}</p>}
-                <button type="submit">Login</button>
-              </form>
-              <p>
-              I don't have an account?
-              <a href="#sign-up" onClick={() => setPageN(2)}> Sign Up</a>
-            </p>
+                <form onSubmit={handleLogin}>
+                  <div>
+                    <label>Email:</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label>Password:</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+                  {error && <p className="error-message">{error}</p>}
+                  <button type="submit">Login</button>
+                </form>
+                <p>
+                  I don't have an account?
+                  <a href="#sign-up" onClick={() => setPageN(2)}> Sign Up</a>
+                </p>
               </div>
 
             )}
