@@ -23,7 +23,7 @@ function App() {
   const [tonConnectUI] = useTonConnectUI();
   const [transactionResult, setTransactionResult] = useState<Object | null>(null);
   const [tableData, setTableData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
   const [haverow, setHaverow] = useState(false);
   const [referal_address, setReferal_address] = useState("");
   const [showShareDialog, setShowShareDialog] = useState(false);
@@ -511,13 +511,13 @@ const fetchData = async () => {
       console.log("logedInUserEmail is " + logedInUserEmail);
       console.log("have row is " + !!owner);
   }
-  setLoading(false);
+  // setLoading(false);
 };
 
 
 
 
-  if (loading) return <div>Loading...</div>;
+  // if (loading) return <div>Loading...</div>;
 
   return (
     <div className="wrapper">
