@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from './supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { TonConnectButton } from "@tonconnect/ui-react";
-import { useTonConnectUI, /* useTonAddress */ } from '@tonconnect/ui-react';
+import { useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
 import WebApp from "@twa-dev/sdk";
 import { Address, beginCell } from "ton-core";
 // import {extractTransactionDetails} from "./translateResult"
@@ -17,6 +17,7 @@ function App() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [logedInUserEmail, setLogedInUserEmail] = useState('Guest');
   const [welcomeDisplayName, setWelcomeDisplayName] = useState('Guest');
   const [error, setError] = useState<string | null>(null);
   const [tonConnectUI] = useTonConnectUI();
@@ -27,11 +28,15 @@ function App() {
   const [referal_address, setReferal_address] = useState("");
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  
+  const logedInUserTonAddress = useTonAddress();
 
 
+
+  
 
   useEffect(() => {
-    const ReferalAddressFromUrl = "1"/*  window.Telegram.WebApp.initDataUnsafe.start_param */;
+    const ReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
     if (ReferalAddressFromUrl) {
       setReferal_address(ReferalAddressFromUrl);
       // console.log("referal address = " + ReferalAddressFromUrl)
@@ -242,35 +247,43 @@ function App() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error(error);
-      } else {
-        setUser(data?.session?.user ?? null);
-        if (data?.session?.user) {
-          const displayName = await fetchUserDisplayName(data.session.user);
-          setWelcomeDisplayName(displayName);
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+            console.error(error);
+        } else {
+            setUser(data?.session?.user ?? null);
+            if (data?.session?.user) {
+                const displayName = await fetchUserDisplayName(data.session.user);
+                setWelcomeDisplayName(displayName);
+                setLogedInUserEmail(data.session.user.email ?? 'Guest');
+            }
         }
-      }
     };
 
     getUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        const fetchAndSetDisplayName = async () => {
-          const displayName = await fetchUserDisplayName(session.user);
-          setWelcomeDisplayName(displayName);
-        };
-        fetchAndSetDisplayName();
-      }
+        setUser(session?.user ?? null);
+        if (session?.user) {
+            const fetchAndSetDisplayName = async () => {
+                const displayName = await fetchUserDisplayName(session.user);
+                setWelcomeDisplayName(displayName);
+                setLogedInUserEmail(session.user.email ?? 'Guest');
+            };
+            fetchAndSetDisplayName();
+        }
     });
 
     return () => {
-      authListener.subscription.unsubscribe();
+        authListener.subscription.unsubscribe();
     };
-  }, []);
+}, []);
+
+
+  // useEffect(() => {
+  //    console.log("logedInUserEmail is " + logedInUserEmail);
+  // }, [logedInUserEmail]);
+  
 
   const fetchUserDisplayName = async (user: User) => {
     try {
@@ -393,16 +406,14 @@ function App() {
       .select('OwnerAddress')
       .eq('id', referal_address)
       .single();
-    console.log("1" + referal_address)
     const emailShapeReferalAddress = myEmailShapeReferalAddress?.OwnerAddress
-    console.log("2" + emailShapeReferalAddress)
     if (myerror) {
       console.error('Error fetching ReferalAddress:', myerror);
       return;
     }
     const { error } = await supabase
       .from('Users')
-      .insert([{ OwnerAddress: user!.email, ReferalAddress: emailShapeReferalAddress, TonAddress:/*  useTonAddress() */ "111111" }]);
+      .insert([{ OwnerAddress: user!.email, ReferalAddress: emailShapeReferalAddress, TonAddress: logedInUserTonAddress }]);
 
     if (error) {
       console.error('Error creating row:', error);
@@ -421,8 +432,12 @@ function App() {
       handleCreateNewRowInUserstbl();
     }
 
-    let ownerAddress: string | null = 'saeed.zng@gmail.com';
+    
+    
+    let ownerAddress: string | null = logedInUserEmail;
+    console.log(ownerAddress);
     let referalAddress: string | null;
+    
     const { data: referalData, error: referalError } = await supabase
       .from('Users')
       .select('ReferalAddress')
@@ -473,25 +488,35 @@ function App() {
       referalAddress = nextReferalAddress;
       ownerAddress = nextOwnerAddress;
     }
+    await fetchData();
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const { data, error } = await supabase
-        .from('Users')
-        .select();
-      console.log('Fetched data:', data);
+    if (logedInUserEmail === 'Guest') return; 
+    fetchData(); 
+}, [logedInUserEmail]);
 
-      if (error) {
-        console.error('Error fetching data:', error);
-      } else {
-        setTableData(data);
-      }
-      setLoading(false);
-    };
+const fetchData = async () => {
+  const { data, error } = await supabase
+      .from('Users')
+      .select();
+  console.log('Fetched data:', data);
 
-    fetchData();
-  }, []);
+  if (error) {
+      console.error('Error fetching data:', error);
+  } else {
+      setTableData(data);
+      const owner = data.find(row => row.OwnerAddress === logedInUserEmail);
+      setHaverow(!!owner);
+      console.log("logedInUserEmail is " + logedInUserEmail);
+      console.log("have row is " + !!owner);
+  }
+  setLoading(false);
+};
+
+
+
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -524,7 +549,7 @@ function App() {
                   <ul>
                     {tableData.map((row) => (
                       <li key={row.id}>
-                        Owner Address: {row.OwnerAddress}, Left Point: {row.LeftPoint}, Right Point: {row.RightPoint}, Referal: {row.ReferalAddress}
+                        {row.OwnerAddress}, LP: {row.LeftPoint}, RP: {row.RightPoint}, Referal: {row.ReferalAddress}
                       </li>
                     ))}
                   </ul>
