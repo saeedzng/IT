@@ -27,8 +27,7 @@ function App() {
   const [haverow, setHaverow] = useState(false);
   const [referal_address, setReferal_address] = useState("");
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [shareUrl, setShareUrl] = useState("");
-  
+  const [shareUrl, setShareUrl] = useState(""); 
   const logedInUserTonAddress = useTonAddress();
 
 
@@ -39,7 +38,6 @@ function App() {
     const ReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
     if (ReferalAddressFromUrl) {
       setReferal_address(ReferalAddressFromUrl);
-      // console.log("referal address = " + ReferalAddressFromUrl)
     }
   }, []);
 
@@ -50,7 +48,7 @@ function App() {
       WebApp.showAlert("You Must Sign In");
       return;
     }
-    if (haverow) {
+    if (!haverow) {
       WebApp.showAlert("You Must Buy a Product First.");
       return;
     }
@@ -401,27 +399,73 @@ function App() {
 
 
   const handleCreateNewRowInUserstbl = async () => {
-    const { data: myEmailShapeReferalAddress, error: myerror } = await supabase
-      .from('Users')
-      .select('OwnerAddress')
-      .eq('id', referal_address)
-      .single();
-    const emailShapeReferalAddress = myEmailShapeReferalAddress?.OwnerAddress
-    if (myerror) {
-      console.error('Error fetching ReferalAddress:', myerror);
-      return;
-    }
-    const { error } = await supabase
-      .from('Users')
-      .insert([{ OwnerAddress: user!.email, ReferalAddress: emailShapeReferalAddress, TonAddress: logedInUserTonAddress }]);
+    try {
+        // Fetch ReferalAddress and RightID, LeftID in a single query
+        const { data: userData, error: fetchError } = await supabase
+            .from('Users')
+            .select('OwnerAddress, RightID, LeftID')
+            .eq('id', referal_address)
+            .single();
 
-    if (error) {
-      console.error('Error creating row:', error);
-    } else {
-      console.log('Row created successfully');
-      setHaverow(true)
+        if (fetchError) {
+            console.error('Error fetching data for creating new row in tbl:', fetchError);
+            return;
+        }
+
+        const emailShapeReferalAddress = userData?.OwnerAddress;
+        const { RightID, LeftID } = userData;
+
+        // Insert new row for new user
+        const { error: insertError } = await supabase
+            .from('Users')
+            .insert([{ OwnerAddress: user!.email, ReferalAddress: emailShapeReferalAddress, TonAddress: logedInUserTonAddress }]);
+
+        if (insertError) {
+            console.error('Error creating row:', insertError);
+            return;
+        } else {
+            console.log('Row created successfully');
+            setHaverow(true);
+        }
+
+        if (RightID === null) {
+            // If RightID is null, update it with the logged-in user's email
+            const { error: updateError } = await supabase
+                .from('Users')
+                .update({ RightID: user!.email })
+                .eq('id', referal_address);
+
+            if (updateError) {
+                console.error('Error updating RightID:', updateError);
+            } else {
+                console.log('RightID updated to', user!.email);
+            }
+        } else if (LeftID === null) {
+            // If RightID is not null but LeftID is null, update LeftID with the logged-in user's email
+            const { error: updateError } = await supabase
+                .from('Users')
+                .update({ LeftID: user!.email })
+                .eq('id', referal_address);
+
+            if (updateError) {
+                console.error('Error updating LeftID:', updateError);
+            } else {
+                console.log('LeftID updated to', user!.email);
+            }
+        } else {
+            // If neither RightID nor LeftID is null, log their values
+            console.log('NOTHING UPDATED RightID and LeftID have values:', { RightID, LeftID });
+        }
+    } catch (error) {
+        console.error('Unexpected error:', error);
     }
-  };
+};
+
+
+
+
+
+
 
   const handleBuyPointForUppers = async () => {
     if (!user) {
@@ -435,7 +479,6 @@ function App() {
     
     
     let ownerAddress: string | null = logedInUserEmail;
-    console.log(ownerAddress);
     let referalAddress: string | null;
     
     const { data: referalData, error: referalError } = await supabase
