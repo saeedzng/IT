@@ -468,15 +468,17 @@ function App() {
 
   const handleBuyPointForUppers = async () => {
     if (!user) {
+      WebApp.showAlert('User not logged in');
       console.error('User not logged in');
       return;
     }
-    if (!haverow) {
-     await handleCreateNewRowInUserstbl();
+    if (haverow) {
+      WebApp.showAlert('You have already purchased the product.');
+      console.error('You have already purchased the product.');
+      return ;
     }
+    await handleCreateNewRowInUserstbl();
 
-    
-    
     let ownerAddress: string | null = logedInUserEmail;
     let referalAddress: string | null;
     
