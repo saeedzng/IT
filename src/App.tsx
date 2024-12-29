@@ -35,7 +35,7 @@ function App() {
   
 
   useEffect(() => {
-    const ReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
+    const ReferalAddressFromUrl = "35" /* window.Telegram.WebApp.initDataUnsafe.start_param */;
     if (ReferalAddressFromUrl) {
       setReferal_address(ReferalAddressFromUrl);
     }
@@ -455,6 +455,7 @@ function App() {
         } else {
             // If neither RightID nor LeftID is null, log their values
             console.log('NOTHING UPDATED RightID and LeftID have values:', { RightID, LeftID });
+            WebApp.showAlert('NOTHING UPDATED RightID and LeftID have values:' + { RightID, LeftID });
         }
     } catch (error) {
         console.error('Unexpected error:', error);
@@ -473,7 +474,7 @@ function App() {
       return;
     }
     if (!haverow) {
-      handleCreateNewRowInUserstbl();
+     await handleCreateNewRowInUserstbl();
     }
 
     
