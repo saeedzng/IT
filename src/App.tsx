@@ -408,7 +408,7 @@ function App() {
             .single();
 
         if (fetchError) {
-            console.error('Error fetching data for creating new row in tbl:', fetchError);
+            console.error('Error fetching data:', fetchError);
             return;
         }
 
@@ -428,8 +428,9 @@ function App() {
             setHaverow(true);
         }
 
-        if (RightID === null) {
-            // If RightID is null, update it with the logged-in user's email
+        // Update RightID or LeftID
+        if (!RightID || RightID === '') {
+            // If RightID is null or empty, update it with the logged-in user's email
             const { error: updateError } = await supabase
                 .from('Users')
                 .update({ RightID: user!.email })
@@ -440,8 +441,8 @@ function App() {
             } else {
                 console.log('RightID updated to', user!.email);
             }
-        } else if (LeftID === null) {
-            // If RightID is not null but LeftID is null, update LeftID with the logged-in user's email
+        } else if (!LeftID || LeftID === '') {
+            // If RightID is not null or empty but LeftID is null or empty, update LeftID with the logged-in user's email
             const { error: updateError } = await supabase
                 .from('Users')
                 .update({ LeftID: user!.email })
@@ -453,17 +454,14 @@ function App() {
                 console.log('LeftID updated to', user!.email);
             }
         } else {
-            // If neither RightID nor LeftID is null, log their values
-            console.log('NOTHING UPDATED RightID and LeftID have values:', { RightID, LeftID });
+            // If neither RightID nor LeftID is null or empty, log their values
+            console.log('RightID and LeftID have values:', { RightID, LeftID });
             WebApp.showAlert('NOTHING UPDATED RightID and LeftID have values:' + { RightID, LeftID });
         }
     } catch (error) {
         console.error('Unexpected error:', error);
     }
 };
-
-
-
 
 
 
