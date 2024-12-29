@@ -35,7 +35,7 @@ function App() {
   
 
   useEffect(() => {
-    const ReferalAddressFromUrl = "35" /* window.Telegram.WebApp.initDataUnsafe.start_param */;
+    const ReferalAddressFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
     if (ReferalAddressFromUrl) {
       setReferal_address(ReferalAddressFromUrl);
     }
