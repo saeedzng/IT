@@ -593,7 +593,7 @@ const fetchData = async () => {
                   <ul>
                     {tableData.map((row) => (
                       <li key={row.id}>
-                        {row.OwnerAddress}, LP: {row.LeftPoint}, RP: {row.RightPoint}, Referal: {row.ReferalAddress}
+                        {row.OwnerAddress}, LID: {row.LeftID}, LP: {row.LeftPoint}, RID: {row.RightID}, RP: {row.RightPoint}, Referal: {row.ReferalAddress}, Points: {row.Points}
                       </li>
                     ))}
                   </ul>
