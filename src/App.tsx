@@ -226,6 +226,14 @@ function App() {
         console.error('You have already purchased the product.');
         return ;
       }
+      const result = await handleCheckReferalisNull();
+        // If result is undefined (RightID and LeftID are not null or empty), exit the function
+        if (!result) {
+          WebApp.showAlert('Your Upper Has Right Hand And Left Hand.');
+          console.error('Your Upper Has Right Hand And Left Hand.');
+          return ;
+        }
+          
       await handleCerateransaction()
   };
 
@@ -407,27 +415,44 @@ function App() {
   }
 
 
-  const handleCreateNewRowInUserstbl = async () => {
+  const handleCheckReferalisNull = async () => {
+    // Fetch ReferalAddress and OwnerAddress, RightID, LeftID in a single query
+    const { data: userData, error: fetchError } = await supabase
+        .from('Users')
+        .select('OwnerAddress, RightID, LeftID')
+        .eq('id', referal_address)
+        .single();
+
+    if (fetchError) {
+        console.error('Error fetching data:', fetchError);
+        return;
+    }
+
+    const { OwnerAddress, RightID, LeftID } = userData;
+
+    if (RightID && RightID !== '' && LeftID && LeftID !== '') {
+        console.log('RightID and LeftID have values:', { RightID, LeftID });
+        WebApp.showAlert('NOTHING UPDATED. RightID and LeftID have values: ' + JSON.stringify({ RightID, LeftID }));
+        return;
+    }
+
+    // Return OwnerAddress, RightID, LeftID if one of them is null or empty
+    return { OwnerAddress, RightID, LeftID };
+};
+
+const handleCreateNewRowInUserstbl = async () => {
     try {
-        // Fetch ReferalAddress and RightID, LeftID in a single query
-        const { data: userData, error: fetchError } = await supabase
-            .from('Users')
-            .select('OwnerAddress, RightID, LeftID')
-            .eq('id', referal_address)
-            .single();
+        // Run handleCheckReferalisNull and get its return values
+        const result = await handleCheckReferalisNull();
+        
+        if (!result) return; // If result is undefined (RightID and LeftID are not null or empty), exit the function
 
-        if (fetchError) {
-            console.error('Error fetching data:', fetchError);
-            return;
-        }
-
-        const emailShapeReferalAddress = userData?.OwnerAddress;
-        const { RightID, LeftID } = userData;
+        const { OwnerAddress, RightID, LeftID } = result;
 
         // Insert new row for new user
         const { error: insertError } = await supabase
             .from('Users')
-            .insert([{ OwnerAddress: user!.email, ReferalAddress: emailShapeReferalAddress, TonAddress: logedInUserTonAddress }]);
+            .insert([{ OwnerAddress: user!.email, ReferalAddress: OwnerAddress, TonAddress: logedInUserTonAddress }]);
 
         if (insertError) {
             console.error('Error creating row:', insertError);
@@ -465,13 +490,12 @@ function App() {
         } else {
             // If neither RightID nor LeftID is null or empty, log their values
             console.log('RightID and LeftID have values:', { RightID, LeftID });
-            WebApp.showAlert('NOTHING UPDATED RightID and LeftID have values:' + { RightID, LeftID });
+            WebApp.showAlert('NOTHING UPDATED RightID and LeftID have values: ' + JSON.stringify({ RightID, LeftID }));
         }
     } catch (error) {
         console.error('Unexpected error:', error);
     }
 };
-
 
 
 
