@@ -215,11 +215,23 @@ function App() {
 
 
 
-
-
-
-
   const handleSendTransaction = async () => {
+      if (!user) {
+        WebApp.showAlert('User not logged in');
+        console.error('User not logged in');
+        return;
+      }
+      if (haverow) {
+        WebApp.showAlert('You have already purchased the product.');
+        console.error('You have already purchased the product.');
+        return ;
+      }
+      await handleCerateransaction()
+  };
+
+
+
+  const handleCerateransaction = async () => {
     try {
       const result = await tonConnectUI.sendTransaction({
         validUntil: Date.now() + 5 * 60 * 1000,
@@ -278,9 +290,6 @@ function App() {
 }, []);
 
 
-  // useEffect(() => {
-  //    console.log("logedInUserEmail is " + logedInUserEmail);
-  // }, [logedInUserEmail]);
   
 
   const fetchUserDisplayName = async (user: User) => {
@@ -467,16 +476,7 @@ function App() {
 
 
   const handleBuyPointForUppers = async () => {
-    if (!user) {
-      WebApp.showAlert('User not logged in');
-      console.error('User not logged in');
-      return;
-    }
-    if (haverow) {
-      WebApp.showAlert('You have already purchased the product.');
-      console.error('You have already purchased the product.');
-      return ;
-    }
+
     await handleCreateNewRowInUserstbl();
 
     let ownerAddress: string | null = logedInUserEmail;
@@ -714,10 +714,9 @@ const fetchData = async () => {
         )}
         {page_n === 3 && (
           <div >
-            <button className="action-button" onClick={handleBuyPointForUppers}>Give buy points to uppers</button>
-            <button className="action-button" onClick={updateUsersPoints}>Convert buypoints to real Points</button>
-            <button className="action-button" onClick={handleSendPaybackOrder}>Payback</button>
-            <button className="action-button" onClick={updateShareRateInMaster}>Update share rate in master</button>
+            <button className="action-button" onClick={updateUsersPoints}>1-Calculate real Points</button><br/>
+            <button className="action-button" onClick={updateShareRateInMaster}>2-Update share rate in master</button><br/>
+            <button className="action-button" onClick={handleSendPaybackOrder}>3-Payback</button><br/>
           </div>
         )}
 
