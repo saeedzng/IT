@@ -42,6 +42,7 @@ function App() {
     const ReferalIDFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
     if (ReferalIDFromUrl) {
       setReferal_ID(ReferalIDFromUrl);
+      WebApp.showAlert(ReferalIDFromUrl);
       ConvertReferalIDToReferalEmail();
     }
   }, []);
