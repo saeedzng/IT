@@ -60,7 +60,7 @@ function App() {
 
     if (referal_Email_Error) {
       console.error('Error Reading referal_Email:', referal_Email_Error);
-      WebApp.showAlert(`Error Reading referal_Email: ${referal_Email_Error.message}`);
+      WebApp.showAlert(`Error Reading referal_Email: ${referal_Email_Error.message} ` + "refID :" + referal_ID);
       return;
     }
 
