@@ -35,22 +35,18 @@ function App() {
   const [shareRate, setShareRate] = useState("empty");
 
 
-
-
-
   useEffect(() => {
     const ReferalIDFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
     if (ReferalIDFromUrl) {
-      setReferal_ID(ReferalIDFromUrl);
-      WebApp.showAlert(referal_ID.toString());
-      ConvertReferalIDToReferalEmail();
+      setReferal_ID(Number(ReferalIDFromUrl)); // Ensure it's a number
     }
   }, []);
-
-
-
   
-
+  useEffect(() => {
+    // This will run every time referal_ID is updated
+    ConvertReferalIDToReferalEmail();
+  }, [referal_ID]);
+  
 
   const ConvertReferalIDToReferalEmail = async () => {
     const { data: referal_Email_Address, error: referal_Email_Error } = await supabase
@@ -58,13 +54,11 @@ function App() {
       .select('OwnerAddress, TonAddress')
       .eq('id', referal_ID)
       .single();
-
     if (referal_Email_Error) {
       console.error('Error Reading referal_Email:', referal_Email_Error);
       WebApp.showAlert(`Error Reading referal_Email: ${referal_Email_Error.message} ` + "refID :" + referal_ID);
       return;
     }
-
     setreferal_Email(referal_Email_Address.OwnerAddress);
     setReferal_Ton_Address(referal_Email_Address.TonAddress);
   };
