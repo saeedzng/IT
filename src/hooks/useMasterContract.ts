@@ -10,7 +10,7 @@ export function useMasterContract() {
 
   const client = useTonClient();
   const { sender } = useTonConnect();
-  const [contractData, setContractData] = useState<null | { owner_address: Address ; total_supply: number ; share_rate:Number}>();
+  const [contractData, setContractData] = useState<null | { owner_address: Address ; total_supply: number ; share_rate:number}>();
   const [balance, setBalance] = useState<null | number>(0);
   const masterContract = useAsyncInitialize(async () => {
     if (!client) return;

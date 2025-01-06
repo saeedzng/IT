@@ -26,13 +26,13 @@ function App() {
   const [tableData, setTableData] = useState<any[]>([]);
   // const [loading, setLoading] = useState(true);
   const [haverow, setHaverow] = useState(false);
-  const [referal_ID, setReferal_ID] = useState(0);
-  const [referal_Email, setreferal_Email] = useState("");
-  const [referal_Ton_Address, setReferal_Ton_Address] = useState("");
+  const [referal_ID_FromURL, setReferal_ID_FromURL] = useState(0);
+  const [referal_Email_FromURL, setreferal_Email_FromURL] = useState("");
+  const [referal_Ton_Address_FromURL, setReferal_Ton_Address_FromURL] = useState("");
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const logedInUserTonAddress = useTonAddress();
-  const [shareRate, setShareRate] = useState("empty");
+  const [shareRate, setShareRate] = useState(0);
 
 
 
@@ -40,7 +40,7 @@ function App() {
   useEffect(() => {
     const ReferalIDFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
     if (ReferalIDFromUrl) {
-      setReferal_ID(Number(ReferalIDFromUrl)); // Ensure it's a number
+      setReferal_ID_FromURL(Number(ReferalIDFromUrl)); // Ensure it's a number
       ConvertReferalIDToReferalEmail(Number(ReferalIDFromUrl)); // Pass the value directly to the function
     }
   }, []);
@@ -54,12 +54,12 @@ function App() {
     
     if (referal_Email_Error) {
       console.error('Error Reading referal_Email:', referal_Email_Error);
-      WebApp.showAlert(`Error Reading referal_Email: ${referal_Email_Error.message} refID: ${id}`);
+      WebApp.showAlert(`Error Reading referal_Email: ${referal_Email_Error.message}`);
       return;
     }
     
-    setreferal_Email(referal_Email_Address.OwnerAddress);
-    setReferal_Ton_Address(referal_Email_Address.TonAddress);
+    setreferal_Email_FromURL(referal_Email_Address.OwnerAddress);
+    setReferal_Ton_Address_FromURL(referal_Email_Address.TonAddress);
   };
   
 
@@ -67,7 +67,7 @@ function App() {
   const master_data  = useMasterContract();
   useEffect(() => {
     if  (master_data && master_data.share_rate  !== undefined) {
-      setShareRate(master_data.share_rate?.toString() );
+      setShareRate(master_data.share_rate);
     }
   }, [master_data]);
 
@@ -90,8 +90,8 @@ function App() {
       const telegramShareUrl = `https://t.me/M_tg25bot/TestApp?startapp=${data.id}`;
       if (navigator.share) {
         navigator.share({
-          title: 'Chicken Farm ',
-          text: 'Send it to share',
+          title: 'Share ',
+          text: 'Share',
           url: telegramShareUrl,
         })
       } else {
@@ -99,9 +99,9 @@ function App() {
       }
     };
     if (error) {
-      WebApp.showAlert('Error :' + error);
+      WebApp.showAlert(`Error : ${error.message}`);
     } else {
-      console.log('share successfully');
+      console.log(`share successfully`);
     }
   }
 
@@ -155,6 +155,7 @@ function App() {
       }
     } catch (error) {
       console.error("Transaction failed:", error);
+      WebApp.showAlert(`Transaction failed: ${error}`);
     }
   };
 
@@ -210,7 +211,7 @@ function App() {
           const updates = userArray.map(user => ({
             TonAddress: user.TonAddress,
             Points: 0,
-            TotalGain: user.TotalGain + (25 * user.Points)
+            TotalGain: user.TotalGain + (shareRate * user.Points)
           }));
   
           for (const user of updates) {
@@ -223,14 +224,19 @@ function App() {
               throw new Error(`Error updating user ${user.TonAddress}: ${updateError.message}`);
             }
           }
+          console.log('Done');
+          WebApp.showAlert(`Done`);
         }
       } catch (error) {
         console.error('Error sending transaction:', error);
+        WebApp.showAlert(`Error sending transaction: ${error}`);
       }
   
     } catch (error) {
       console.error('Error processing user points:', error);
+      WebApp.showAlert(`Error processing user points: ${error}`);
     }
+    await fetchData();
   }
   
   
@@ -273,7 +279,7 @@ function App() {
 
       let datacellBuilder = beginCell()
         .storeUint(4, 32)
-        .storeAddress(Address.parse(referal_Ton_Address));
+        .storeAddress(Address.parse(referal_Ton_Address_FromURL));
       const datacell = datacellBuilder.endCell();
 
       const result = await tonConnectUI.sendTransaction({
@@ -315,9 +321,7 @@ function App() {
         }
       }
     };
-
     getUser();
-
     const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -329,7 +333,6 @@ function App() {
         fetchAndSetDisplayName();
       }
     });
-
     return () => {
       authListener.subscription.unsubscribe();
     };
@@ -355,7 +358,6 @@ function App() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-
     // Add displayName to the sign-up data
     const { error } = await supabase.auth.signUp({
       email,
@@ -366,7 +368,6 @@ function App() {
         }
       }
     });
-
     if (error) {
       setError(error.message);
     } else {
@@ -392,18 +393,15 @@ function App() {
   const handleSignOut = async () => {
     // Fetch the current session
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
     if (sessionError) {
       console.error('Error fetching session:', sessionError.message);
       return;
     }
-
     // Check if there is an active session
     if (!sessionData?.session) {
       console.error('No active session found!');
       return;
     }
-
     // Proceed to sign out if there is an active session
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -421,16 +419,13 @@ function App() {
       const { data: users, error: fetchError } = await supabase
         .from('Users')
         .select('id, RightPoint, LeftPoint');
-
       if (fetchError) {
         throw new Error(`Error fetching users: ${fetchError.message}`);
       }
-
       // Iterate over each user and update points
       for (const user of users) {
         const { id, RightPoint, LeftPoint } = user;
         const minPoint = Math.min(RightPoint, LeftPoint);
-
         // Update the user's points
         const { error: updateError } = await supabase
           .from('Users')
@@ -440,17 +435,16 @@ function App() {
             LeftPoint: 0
           })
           .eq('id', id);
-
         if (updateError) {
           console.error(`Error updating user with id ${id}: ${updateError.message}`);
         }
       }
-
       console.log('Users points updated successfully');
       WebApp.showAlert('Users points updated successfully');
     } catch (error) {
       console.error('Error updating users points:', error);
     }
+    await fetchData();
   }
 
 
@@ -459,17 +453,14 @@ function App() {
     const { data: userData, error: fetchError } = await supabase
       .from('Users')
       .select('OwnerAddress, RightID, LeftID, TotalGain, ProID')
-      .eq('id', referal_ID)
+      .eq('id', referal_ID_FromURL)
       .single();
-  
     if (fetchError) {
       console.error('Error fetching data:', fetchError);
       WebApp.showAlert('Error Reading referal_Email, RightID, LeftID, TotalGain, and ProID');
       return;
     }
-  
     const { OwnerAddress, RightID, LeftID, TotalGain, ProID } = userData;
-  
     if (RightID && RightID !== '' && LeftID && LeftID !== '') {
       if (TotalGain >= 20000) {
         console.log('RightID and LeftID have values, TotalGain is sufficient:', { RightID, LeftID, TotalGain, ProID });
@@ -481,7 +472,6 @@ function App() {
         return;
       }
     }
-    
     // Return userData if one of RightID or LeftID is null or empty
     return { OwnerAddress, RightID, LeftID, TotalGain, ProID };
   };
@@ -492,16 +482,12 @@ function App() {
     try {
       // Run handleCheckReferalisNull and get its return values
       const result = await handleCheckReferalisNull();
-  
       if (!result) return; // If result is undefined (RightID and LeftID are not null or empty), exit the function
-  
       const { OwnerAddress, RightID, LeftID, TotalGain, ProID } = result;
-  
       // Insert new row for new user
       const { error: insertError } = await supabase
         .from('Users')
         .insert([{ OwnerAddress: user!.email, ReferalAddress: OwnerAddress, TonAddress: logedInUserTonAddress }]);
-  
       if (insertError) {
         console.error('Error creating row:', insertError);
         return;
@@ -509,15 +495,13 @@ function App() {
         console.log('Row created successfully');
         setHaverow(true);
       }
-  
       // Update RightID or LeftID
       if (!RightID || RightID === '') {
         // If RightID is null or empty, update it with the logged-in user's email
         const { error: updateError } = await supabase
           .from('Users')
           .update({ RightID: user!.email })
-          .eq('id', referal_ID);
-  
+          .eq('id', referal_ID_FromURL);
         if (updateError) {
           console.error('Error updating RightID:', updateError);
         } else {
@@ -528,8 +512,7 @@ function App() {
         const { error: updateError } = await supabase
           .from('Users')
           .update({ LeftID: user!.email })
-          .eq('id', referal_ID);
-  
+          .eq('id', referal_ID_FromURL);
         if (updateError) {
           console.error('Error updating LeftID:', updateError);
         } else {
@@ -540,8 +523,7 @@ function App() {
         const { error: updateError } = await supabase
           .from('Users')
           .update({ ProID: user!.email })
-          .eq('id', referal_ID);
-  
+          .eq('id', referal_ID_FromURL);
         if (updateError) {
           console.error('Error updating ProID:', updateError);
         } else {
@@ -559,21 +541,15 @@ function App() {
   
 
 
-
-
   const handleBuyPointForUppers = async () => {
-
     await handleCreateNewRowInUserstbl();
-
     let ownerAddress: string | null = logedInUserEmail;
     let referalAddress: string | null;
-
     const { data: referalData, error: referalError } = await supabase
       .from('Users')
       .select('ReferalAddress')
       .eq('OwnerAddress', ownerAddress)
       .single();
-
     if (referalError) {
       console.error('Error fetching ReferalAddress:', referalError);
       return;
@@ -585,7 +561,6 @@ function App() {
         .select('RightPoint , RightID , LeftPoint , LeftID , ReferalAddress , OwnerAddress')
         .eq('OwnerAddress', referalAddress)
         .single();
-
       if (error) {
         console.error('Error fetching RightPoint or ReferalAddress:', error);
         return;
@@ -608,7 +583,6 @@ function App() {
         .from('Users')
         .update({ RightPoint: feutureRightPoint, LeftPoint: feutureLeftPoint })
         .eq('OwnerAddress', referalAddress);
-
       if (updateError) {
         console.error('Error updating RightPoint:', updateError);
         return;
@@ -621,17 +595,18 @@ function App() {
     await fetchData();
   };
 
+
   useEffect(() => {
     if (logedInUserEmail === 'Guest') return;
     fetchData();
   }, [logedInUserEmail]);
+
 
   const fetchData = async () => {
     const { data, error } = await supabase
       .from('Users')
       .select();
     console.log('Fetched data:', data);
-
     if (error) {
       console.error('Error fetching data:', error);
     } else {
@@ -641,13 +616,8 @@ function App() {
       console.log("logedInUserEmail is " + logedInUserEmail);
       console.log("have row is " + !!owner);
     }
-    // setLoading(false);
   };
 
-
-
-
-  // if (loading) return <div>Loading...</div>;
 
   return (
     <div className="wrapper">
@@ -801,7 +771,7 @@ function App() {
         {page_n === 3 && (
           <div >
             <label>Share_rate = {shareRate}</label><br/>
-            <label>Your Upper = {referal_Email}</label><br/>
+            <label>Your Upper = {referal_Email_FromURL}</label><br/>
             <button className="action-button" onClick={updateUsersPoints}>1-Calculate real Points</button><br />
             <button className="action-button" onClick={updateShareRateInMaster}>2-Update share rate in master</button><br />
             <button className="action-button" onClick={handleSendPaybackOrder}>3-Payback</button><br />

@@ -2,9 +2,9 @@ import { Address, beginCell, Cell, Contract, contractAddress, ContractProvider, 
 
 
 export type MasterConfig = {
-    total_supply: Number;
+    total_supply: number;
     admin_address: Address;
-    share_rate: Number;
+    share_rate: number;
 
 };
 
