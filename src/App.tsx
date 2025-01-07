@@ -558,42 +558,51 @@ function App() {
     while (referalAddress) {
       const { data, error } = await supabase
         .from('Users')
-        .select('RightPoint , RightID , LeftPoint , LeftID , ReferalAddress , OwnerAddress')
+        .select('RightPoint, RightID, LeftPoint, LeftID, ProPoint, ProID, ReferalAddress, OwnerAddress')
         .eq('OwnerAddress', referalAddress)
         .single();
       if (error) {
-        console.error('Error fetching RightPoint or ReferalAddress:', error);
+        console.error('Error fetching data:', error);
         return;
       }
       const currentRightPoint: number = data.RightPoint;
       const currentLeftPoint: number = data.LeftPoint;
+      const proPoint: number = data.ProPoint;
       const rightID: string = data.RightID;
       const leftID: string = data.LeftID;
+      const proID: string = data.ProID;
       const nextReferalAddress: string | null = data.ReferalAddress;
       const nextOwnerAddress: string | null = data.OwnerAddress;
-      let feutureRightPoint = currentRightPoint;
-      let feutureLeftPoint = currentLeftPoint;
+      let futureRightPoint = currentRightPoint;
+      let futureLeftPoint = currentLeftPoint;
+      let futureProPoint = proPoint;
+  
       if (ownerAddress === rightID) {
-        feutureRightPoint = currentRightPoint + 1;
+        futureRightPoint = currentRightPoint + 1;
       }
       if (ownerAddress === leftID) {
-        feutureLeftPoint = currentLeftPoint + 1;
+        futureLeftPoint = currentLeftPoint + 1;
       }
+      if (ownerAddress === proID) {
+        futureProPoint = proPoint + 1;
+      }
+  
       const { error: updateError } = await supabase
         .from('Users')
-        .update({ RightPoint: feutureRightPoint, LeftPoint: feutureLeftPoint })
+        .update({ RightPoint: futureRightPoint, LeftPoint: futureLeftPoint, ProPoint: futureProPoint })
         .eq('OwnerAddress', referalAddress);
       if (updateError) {
-        console.error('Error updating RightPoint:', updateError);
+        console.error('Error updating points:', updateError);
         return;
       } else {
-        console.log(`Point for ${referalAddress} updated successfully`);
+        console.log(`Points for ${referalAddress} updated successfully`);
       }
       referalAddress = nextReferalAddress;
       ownerAddress = nextOwnerAddress;
     }
     await fetchData();
   };
+  
 
 
   useEffect(() => {
