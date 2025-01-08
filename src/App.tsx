@@ -248,7 +248,7 @@ function App() {
         .select('OwnerAddress, ProID, ProPoint, TonAddress, ProGain')
         .not('ProID', 'is', null)
         .not('ProID', 'eq', '')
-        .gt('ProPoints', 1000)
+        .gt('ProPoint', 1000)
         .limit(3);
       
       if (fetchError) {
