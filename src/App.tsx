@@ -242,7 +242,7 @@ function App() {
   
   async function PaybackOnProhand() {
     try {
-      // Fetch users with ProID not null or empty and ProPoints greater than 1000, limited to 3 users
+      // Fetch users with ProID not null or empty and ProPoint greater than 1000, limited to 3 users
       const { data: users, error: fetchError } = await supabase
         .from('Users')
         .select('OwnerAddress, ProID, ProPoint, TonAddress, ProGain')
@@ -250,7 +250,7 @@ function App() {
         .not('ProID', 'eq', '')
         .gt('ProPoint', 1000)
         .limit(3);
-      
+  
       if (fetchError) {
         throw new Error(`Error fetching users: ${fetchError.message}`);
       }
@@ -265,7 +265,7 @@ function App() {
       const userArray = users.map(user => ({
         OwnerAddress: user.OwnerAddress,
         ProID: user.ProID,
-        ProPoints: user.ProPoint,
+        ProPoint: user.ProPoint,
         TonAddress: user.TonAddress,
         ProGain: user.ProGain
       }));
@@ -277,11 +277,12 @@ function App() {
   
       // Add each user's address and calculated payment to the datacell
       userArray.forEach(user => {
-        const paymentAmount = (user.ProPoints * 1000) * 0.04;
+        const paymentAmount = (user.ProPoint * 1000) * 0.04;
         datacellBuilder
           .storeAddress(Address.parse(user.TonAddress))
           .storeCoins(paymentAmount);
         user.ProGain += paymentAmount; // Update the user's ProGain
+        user.ProPoint = 0; // Reset ProPoint to zero
       });
   
       const datacell = datacellBuilder.endCell();
@@ -291,7 +292,7 @@ function App() {
           validUntil: Date.now() + 5 * 60 * 1000,
           messages: [
             {
-              address: "kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG",
+              address: "kQAhnoM01NCNwqmoPvXmGEXXxYsrFDcVTm1tNklQXkU0RuHT",
               amount: "10000000",
               payload: datacell.toBoc().toString("base64"),
             }
@@ -299,13 +300,13 @@ function App() {
         });
   
         if (result) {
-          // Update ProGain for the current batch of users
+          // Update ProGain and ProPoint for the current batch of users
           for (const user of userArray) {
             const { error: updateError } = await supabase
               .from('Users')
-              .update({ ProGain: user.ProGain })
+              .update({ ProGain: user.ProGain, ProPoint: user.ProPoint })
               .eq('TonAddress', user.TonAddress);
-            
+  
             if (updateError) {
               throw new Error(`Error updating user ${user.OwnerAddress}: ${updateError.message}`);
             }
@@ -324,7 +325,6 @@ function App() {
     await fetchData();
   }
   
-
 
 
 
