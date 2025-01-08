@@ -245,7 +245,7 @@ function App() {
       // Fetch users with ProID not null or empty and ProPoints greater than 1000, limited to 3 users
       const { data: users, error: fetchError } = await supabase
         .from('Users')
-        .select('OwnerAddress, ProID, ProPoints, TonAddress, ProGain')
+        .select('OwnerAddress, ProID, ProPoint, TonAddress, ProGain')
         .not('ProID', 'is', null)
         .not('ProID', 'eq', '')
         .gt('ProPoints', 1000)
@@ -256,8 +256,8 @@ function App() {
       }
   
       if (users.length === 0) {
-        console.log('No users with ProPoints greater than 1000 found.');
-        WebApp.showAlert('No users with ProPoints greater than 1000 found.');
+        console.log('No users with ProPoint greater than 1000 found.');
+        WebApp.showAlert('No users with ProPoint greater than 1000 found.');
         return;
       }
   
@@ -265,7 +265,7 @@ function App() {
       const userArray = users.map(user => ({
         OwnerAddress: user.OwnerAddress,
         ProID: user.ProID,
-        ProPoints: user.ProPoints,
+        ProPoints: user.ProPoint,
         TonAddress: user.TonAddress,
         ProGain: user.ProGain
       }));
