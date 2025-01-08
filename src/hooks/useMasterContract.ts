@@ -15,7 +15,7 @@ export function useMasterContract() {
   const masterContract = useAsyncInitialize(async () => {
     if (!client) return;
     const contract = new Master(
-      Address.parse("kQAhnoM01NCNwqmoPvXmGEXXxYsrFDcVTm1tNklQXkU0RuHT") 
+      Address.parse("kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG") 
     );
     return client.open(contract) as OpenedContract<Master>;
   }, [client]);

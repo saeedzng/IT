@@ -144,7 +144,7 @@ function App() {
         validUntil: Date.now() + 5 * 60 * 1000,
         messages: [
           {
-            address: "kQAhnoM01NCNwqmoPvXmGEXXxYsrFDcVTm1tNklQXkU0RuHT",
+            address: "kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG",
             amount: "10000000",
             payload: share_data_cell.toBoc().toString("base64"),
           }
@@ -199,7 +199,7 @@ function App() {
           validUntil: Date.now() + 5 * 60 * 1000,
           messages: [
             {
-              address: "kQAhnoM01NCNwqmoPvXmGEXXxYsrFDcVTm1tNklQXkU0RuHT",
+              address: "kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG",
               amount: "10000000",
               payload: datacell.toBoc().toString("base64"),
             }
@@ -240,7 +240,90 @@ function App() {
   }
   
   
-
+  async function PaybackOnProhand() {
+    try {
+      // Fetch users with ProID not null or empty and ProPoints greater than 1000, limited to 3 users
+      const { data: users, error: fetchError } = await supabase
+        .from('Users')
+        .select('OwnerAddress, ProID, ProPoints, TonAddress, ProGain')
+        .not('ProID', 'is', null)
+        .not('ProID', 'eq', '')
+        .gt('ProPoints', 1000)
+        .limit(3);
+      
+      if (fetchError) {
+        throw new Error(`Error fetching users: ${fetchError.message}`);
+      }
+  
+      if (users.length === 0) {
+        console.log('No users with ProPoints greater than 1000 found.');
+        WebApp.showAlert('No users with ProPoints greater than 1000 found.');
+        return;
+      }
+  
+      // Create user array with necessary details
+      const userArray = users.map(user => ({
+        OwnerAddress: user.OwnerAddress,
+        ProID: user.ProID,
+        ProPoints: user.ProPoints,
+        TonAddress: user.TonAddress,
+        ProGain: user.ProGain
+      }));
+  
+      // Create the datacell for the current batch
+      let datacellBuilder = beginCell()
+        .storeUint(5, 32) // Indicates the type of transaction
+        .storeUint(userArray.length, 32); // Number of users in the current batch
+  
+      // Add each user's address and calculated payment to the datacell
+      userArray.forEach(user => {
+        const paymentAmount = (user.ProPoints * 1000) * 0.04;
+        datacellBuilder
+          .storeAddress(Address.parse(user.TonAddress))
+          .storeCoins(paymentAmount);
+        user.ProGain += paymentAmount; // Update the user's ProGain
+      });
+  
+      const datacell = datacellBuilder.endCell();
+  
+      try {
+        const result = await tonConnectUI.sendTransaction({
+          validUntil: Date.now() + 5 * 60 * 1000,
+          messages: [
+            {
+              address: "kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG",
+              amount: "10000000",
+              payload: datacell.toBoc().toString("base64"),
+            }
+          ]
+        });
+  
+        if (result) {
+          // Update ProGain for the current batch of users
+          for (const user of userArray) {
+            const { error: updateError } = await supabase
+              .from('Users')
+              .update({ ProGain: user.ProGain })
+              .eq('TonAddress', user.TonAddress);
+            
+            if (updateError) {
+              throw new Error(`Error updating user ${user.OwnerAddress}: ${updateError.message}`);
+            }
+          }
+          console.log('Transaction and ProGain update successful.');
+          WebApp.showAlert(`Transaction successful for ${userArray.length} users. Details: ${userArray.map(user => `Owner: ${user.OwnerAddress}, Amount: ${user.ProGain}`).join('; ')}`);
+        }
+      } catch (error) {
+        console.error('Error sending transaction:', error);
+        WebApp.showAlert(`Error sending transaction: ${error}`);
+      }
+    } catch (error) {
+      console.error('Error processing user ProPoints:', error);
+      WebApp.showAlert(`Error processing user ProPoints: ${error}`);
+    }
+    await fetchData();
+  }
+  
 
 
 
@@ -286,7 +369,7 @@ function App() {
         validUntil: Date.now() + 5 * 60 * 1000,
         messages: [
           {
-            address: "kQAhnoM01NCNwqmoPvXmGEXXxYsrFDcVTm1tNklQXkU0RuHT",
+            address: "kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG",
             amount: "10000000",
             payload: datacell.toBoc().toString("base64"),
           }
@@ -784,6 +867,7 @@ function App() {
             <button className="action-button" onClick={updateUsersPoints}>1-Calculate real Points</button><br />
             <button className="action-button" onClick={updateShareRateInMaster}>2-Update share rate in master</button><br />
             <button className="action-button" onClick={handleSendPaybackOrder}>3-Payback</button><br />
+            <button className="action-button" onClick={PaybackOnProhand}>3-Payback Pro Hand</button><br />
           </div>
         )}
 
