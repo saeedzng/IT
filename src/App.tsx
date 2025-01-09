@@ -739,16 +739,18 @@ function App() {
       <div className="top-section">
         <div className="header">
           <div className="left">
-            <img src="./logo.png" alt="Logo" className="logo" />
+            <img src="./logo.png" alt="Logo" className="logo" onClick={() => setPageN(0)} />
           </div>
           <div className="right">
             <TonConnectButton />
+            {user && (
+              <button onClick={handleSignOut} className="logout-button">Logout</button>
+            )}
           </div>
         </div>
         <nav className="menu">
           <ul>
             <li key={0}><button onClick={() => setPageN(0)}>Home</button></li>
-            <li key={1}><button onClick={() => setPageN(1)}>Login</button></li>
             <li key={2}><button onClick={() => setPageN(3)}>Admin</button></li>
           </ul>
         </nav>
@@ -760,41 +762,24 @@ function App() {
               <div>
                 <p>Welcome, {welcomeDisplayName}</p>
                 <div>
-                  <div>
-                    {haverow ? (
-                      <div>
-                        <ul>
-                          {tableData.map((row) => (
-                            <li key={row.id}>
-                              <div>
-                                <strong>Your Email:</strong> {row.OwnerAddress}
-                              </div>
-                              <div>
-                                <strong>Your Uppside:</strong> {row.ReferalAddress}
-                              </div>
-                              <div>
-                                <strong>Left Hand:</strong> {row.LeftID} ({row.LeftPoint})
-                              </div>
-                              <div>
-                                <strong>Right Hand:</strong> {row.RightID} ({row.RightPoint})
-                              </div>
-                              <div>
-                                <strong>Pro Hand:</strong> {row.ProID} ({row.ProPoint})
-                              </div>
-                            </li>
-                          ))}
-                        </ul>
-
-                        <button className="action-button" onClick={handleShare}>Share Referal</button>
-                      </div>
-                      
-                    ) : (
-                      <div>
-                        <button className="action-button" onClick={handleSendTransaction}>Buy Product</button>
-                      </div>)
-                    };
-                  </div>
+                  {haverow ? (
+                    <ul>
+                      {tableData.map((row) => (
+                        <li key={row.id}>
+                          <div><strong>Your Email:</strong> {row.OwnerAddress}</div>
+                          <div><strong>Your Uppside:</strong> {row.ReferalAddress}</div>
+                          <div><strong>Left Hand:</strong> {row.LeftID} ({row.LeftPoint})</div>
+                          <div><strong>Right Hand:</strong> {row.RightID} ({row.RightPoint})</div>
+                          <div><strong>Pro Hand:</strong> {row.ProID} ({row.ProPoint})</div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <button className="action-button" onClick={handleSendTransaction}>Buy Product</button>
+                  )}
                 </div>
+                <button className="action-button" onClick={handleShare}>Share Referal</button>
+  
                 {/* Share Dialog */}
                 {showShareDialog && (
                   <div className="dialog-overlay">
@@ -809,7 +794,6 @@ function App() {
                     </div>
                   </div>
                 )}
-
               </div>
             ) : (
               <div>
@@ -822,48 +806,39 @@ function App() {
             )}
           </div>
         )}
+  
         {page_n === 1 && (
           <div className="form-container">
             <h2>Login</h2>
-            {user ? (
+            <form onSubmit={handleLogin}>
               <div>
-                <p>Logged In: {user.email}</p>
-                <button onClick={handleSignOut}>Sign Out</button>
+                <label>Email:</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
-            ) : (
               <div>
-                <form onSubmit={handleLogin}>
-                  <div>
-                    <label>Email:</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label>Password:</label>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  {error && <p className="error-message">{error}</p>}
-                  <button type="submit">Login</button>
-                </form>
-                <p>
-                  I don't have an account?
-                  <a href="#sign-up" onClick={() => setPageN(2)}> Sign Up</a>
-                </p>
+                <label>Password:</label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
-
-            )}
+              {error && <p className="error-message">{error}</p>}
+              <button type="submit">Login</button>
+            </form>
+            <p>
+              I don't have an account?
+              <a href="#sign-up" onClick={() => setPageN(2)}> Sign Up</a>
+            </p>
           </div>
         )}
-
+  
         {page_n === 2 && (
           <div className="form-container">
             <h2>Sign Up</h2>
@@ -898,17 +873,15 @@ function App() {
               {error && <p className="error-message">{error}</p>}
               <button type="submit">Sign Up</button>
             </form>
-
-            {/* Link to Login Section */}
             <p>
               Already have an account?
               <a href="#login" onClick={() => setPageN(1)}> Login</a>
             </p>
           </div>
-
         )}
+  
         {page_n === 3 && (
-          <div >
+          <div>
             <label>Share_rate = {shareRate}</label><br />
             <label>Your Upper = {referal_Email_FromURL}</label><br />
             <button className="action-button" onClick={updateUsersPoints}>1-Calculate real Points</button><br />
@@ -917,10 +890,9 @@ function App() {
             <button className="action-button" onClick={PaybackOnProhand}>3-Payback Pro Hand</button><br />
           </div>
         )}
-
       </div>
     </div>
   );
 };
-
-export default App;
+  export default App;
+  
