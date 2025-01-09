@@ -17,6 +17,7 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [logedInUserEmail, setLogedInUserEmail] = useState('Guest');
   const [welcomeDisplayName, setWelcomeDisplayName] = useState('Guest');
@@ -461,6 +462,10 @@ function App() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
     // Add displayName to the sign-up data
     const { error } = await supabase.auth.signUp({
       email,
@@ -479,6 +484,7 @@ function App() {
       setPageN(1);
     }
   };
+
 
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -779,7 +785,7 @@ function App() {
                   )}
                 </div>
                 <button className="action-button" onClick={handleShare}>Share Referal</button>
-  
+
                 {/* Share Dialog */}
                 {showShareDialog && (
                   <div className="dialog-overlay">
@@ -806,7 +812,7 @@ function App() {
             )}
           </div>
         )}
-  
+
         {page_n === 1 && (
           <div className="form-container">
             <h2>Login</h2>
@@ -838,7 +844,7 @@ function App() {
             </p>
           </div>
         )}
-  
+
         {page_n === 2 && (
           <div className="form-container">
             <h2>Sign Up</h2>
@@ -870,6 +876,15 @@ function App() {
                   required
                 />
               </div>
+              <div>
+                <label>Confirm Password:</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+              </div>
               {error && <p className="error-message">{error}</p>}
               <button type="submit">Sign Up</button>
             </form>
@@ -879,7 +894,8 @@ function App() {
             </p>
           </div>
         )}
-  
+
+
         {page_n === 3 && (
           <div>
             <label>Share_rate = {shareRate}</label><br />
@@ -894,5 +910,4 @@ function App() {
     </div>
   );
 };
-  export default App;
-  
+export default App;
