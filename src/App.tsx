@@ -6,7 +6,7 @@ import { TonConnectButton } from "@tonconnect/ui-react";
 import { useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
 import WebApp from "@twa-dev/sdk";
 import { Address, beginCell } from "ton-core";
-import {useMasterContract} from "./hooks/useMasterContract"
+import { useMasterContract } from "./hooks/useMasterContract"
 // import {extractTransactionDetails} from "./translateResult"
 declare global { interface Window { Telegram: any; } }
 
@@ -44,29 +44,29 @@ function App() {
       ConvertReferalIDToReferalEmail(Number(ReferalIDFromUrl)); // Pass the value directly to the function
     }
   }, []);
-  
-  const ConvertReferalIDToReferalEmail = async (id : number) => {
+
+  const ConvertReferalIDToReferalEmail = async (id: number) => {
     const { data: referal_Email_Address, error: referal_Email_Error } = await supabase
       .from('Users')
       .select('OwnerAddress, TonAddress')
       .eq('id', id)
       .single();
-    
+
     if (referal_Email_Error) {
       console.error('Error Reading referal_Email:', referal_Email_Error);
       WebApp.showAlert(`Error Reading referal_Email: ${referal_Email_Error.message}`);
       return;
     }
-    
+
     setreferal_Email_FromURL(referal_Email_Address.OwnerAddress);
     setReferal_Ton_Address_FromURL(referal_Email_Address.TonAddress);
   };
-  
 
 
-  const master_data  = useMasterContract();
+
+  const master_data = useMasterContract();
   useEffect(() => {
-    if  (master_data && master_data.share_rate  !== undefined) {
+    if (master_data && master_data.share_rate !== undefined) {
       setShareRate(master_data.share_rate);
     }
   }, [master_data]);
@@ -168,35 +168,44 @@ function App() {
         .select('TonAddress, Points, TotalGain')
         .gt('Points', 0)
         .limit(3);
-  
+
       if (fetchError) {
         throw new Error(`Error fetching users: ${fetchError.message}`);
       }
-  
+
+      if (users.length === 0) {
+        console.log('No users with Points greater than 0 found.');
+        WebApp.showAlert('No users with Points greater than 0 found.');
+        return;
+      }
+
       // Create user array
       const userArray = users.map(user => ({
         TonAddress: user.TonAddress,
         Points: user.Points,
         TotalGain: user.TotalGain
       }));
-  
+
+      console.log('Users fetched:', userArray);
+
       // Create the datacell for the current batch
       let datacellBuilder = beginCell()
-        .storeUint(3, 32)
+        .storeUint(3, 32) // Indicates the type of transaction
         .storeUint(userArray.length, 32); // Number of users in the current batch
-  
+
       // Add each user's address and points to the datacell
       userArray.forEach(user => {
         datacellBuilder
           .storeAddress(Address.parse(user.TonAddress))
           .storeCoins(user.Points);
       });
-  
+
       const datacell = datacellBuilder.endCell();
-  
+      console.log('Datacell created:', datacell.toString());
+
       try {
         const result = await tonConnectUI.sendTransaction({
-          validUntil: Date.now() + 5 * 60 * 1000,
+          validUntil: Date.now() + 5 * 60 * 1000, // Transaction valid for 5 minutes
           messages: [
             {
               address: "kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG",
@@ -205,41 +214,52 @@ function App() {
             }
           ]
         });
-  
+
         if (result) {
+          console.log('Transaction successful:', result);
+
           // Update Points and TotalGain for the current batch of users
           const updates = userArray.map(user => ({
             TonAddress: user.TonAddress,
-            Points: 0,
+            Points: 0, // Reset Points to zero after transaction
             TotalGain: user.TotalGain + (shareRate * user.Points)
           }));
-  
+
+          console.log('Updates prepared:', updates);
+
           for (const user of updates) {
             const { error: updateError } = await supabase
               .from('Users')
               .update({ Points: user.Points, TotalGain: user.TotalGain })
               .eq('TonAddress', user.TonAddress);
-  
+
             if (updateError) {
               throw new Error(`Error updating user ${user.TonAddress}: ${updateError.message}`);
             }
+
+            console.log(`User ${user.TonAddress} updated successfully: Points set to 0, TotalGain updated to ${user.TotalGain}`);
           }
-          console.log('Done');
-          WebApp.showAlert(`Done`);
+
+          const transactionDetails = updates.map(user => `TonAddress: ${user.TonAddress}, Points: 0, TotalGain: ${user.TotalGain}`).join('; ');
+          console.log('All users updated successfully.');
+          WebApp.showAlert(`Transaction successful for ${userArray.length} users. Details: ${transactionDetails}`);
         }
       } catch (error) {
         console.error('Error sending transaction:', error);
         WebApp.showAlert(`Error sending transaction: ${error}`);
       }
-  
+
     } catch (error) {
       console.error('Error processing user points:', error);
       WebApp.showAlert(`Error processing user points: ${error}`);
     }
+
+    // Fetch updated data
     await fetchData();
   }
-  
-  
+
+
+
   async function PaybackOnProhand() {
     try {
       // Fetch users with ProID not null or empty and ProPoint greater than 1000, limited to 3 users
@@ -250,17 +270,17 @@ function App() {
         .not('ProID', 'eq', '')
         .gt('ProPoint', 1000)
         .limit(3);
-  
+
       if (fetchError) {
         throw new Error(`Error fetching users: ${fetchError.message}`);
       }
-  
+
       if (users.length === 0) {
         console.log('No users with ProPoint greater than 1000 found.');
         WebApp.showAlert('No users with ProPoint greater than 1000 found.');
         return;
       }
-  
+
       // Create user array with necessary details
       const userArray = users.map(user => ({
         OwnerAddress: user.OwnerAddress,
@@ -269,12 +289,12 @@ function App() {
         TonAddress: user.TonAddress,
         ProGain: user.ProGain
       }));
-  
+
       // Create the datacell for the current batch
       let datacellBuilder = beginCell()
         .storeUint(5, 32) // Indicates the type of transaction
         .storeUint(userArray.length, 32); // Number of users in the current batch
-  
+
       // Add each user's address and calculated payment to the datacell
       userArray.forEach(user => {
         const paymentAmount = (user.ProPoint * 1000) * 0.04;
@@ -284,9 +304,9 @@ function App() {
         user.ProGain += paymentAmount; // Update the user's ProGain
         user.ProPoint = 0; // Reset ProPoint to zero
       });
-  
+
       const datacell = datacellBuilder.endCell();
-  
+
       try {
         const result = await tonConnectUI.sendTransaction({
           validUntil: Date.now() + 5 * 60 * 1000,
@@ -298,7 +318,7 @@ function App() {
             }
           ]
         });
-  
+
         if (result) {
           // Update ProGain and ProPoint for the current batch of users
           for (const user of userArray) {
@@ -306,7 +326,7 @@ function App() {
               .from('Users')
               .update({ ProGain: user.ProGain, ProPoint: user.ProPoint })
               .eq('TonAddress', user.TonAddress);
-  
+
             if (updateError) {
               throw new Error(`Error updating user ${user.OwnerAddress}: ${updateError.message}`);
             }
@@ -324,7 +344,7 @@ function App() {
     }
     await fetchData();
   }
-  
+
 
 
 
@@ -558,8 +578,8 @@ function App() {
     // Return userData if one of RightID or LeftID is null or empty
     return { OwnerAddress, RightID, LeftID, TotalGain, ProID };
   };
-  
-  
+
+
 
   const handleCreateNewRowInUserstbl = async () => {
     try {
@@ -621,7 +641,7 @@ function App() {
       console.error('Unexpected error:', error);
     }
   };
-  
+
 
 
   const handleBuyPointForUppers = async () => {
@@ -659,7 +679,7 @@ function App() {
       let futureRightPoint = currentRightPoint;
       let futureLeftPoint = currentLeftPoint;
       let futureProPoint = proPoint;
-  
+
       if (ownerAddress === rightID) {
         futureRightPoint = currentRightPoint + 1;
       }
@@ -669,7 +689,7 @@ function App() {
       if (ownerAddress === proID) {
         futureProPoint = proPoint + 1;
       }
-  
+
       const { error: updateError } = await supabase
         .from('Users')
         .update({ RightPoint: futureRightPoint, LeftPoint: futureLeftPoint, ProPoint: futureProPoint })
@@ -685,7 +705,7 @@ function App() {
     }
     await fetchData();
   };
-  
+
 
 
   useEffect(() => {
@@ -693,22 +713,25 @@ function App() {
     fetchData();
   }, [logedInUserEmail]);
 
-
   const fetchData = async () => {
     const { data, error } = await supabase
       .from('Users')
-      .select();
-    console.log('Fetched data:', data);
+      .select()
+      .eq('OwnerAddress', logedInUserEmail)
+      .single(); // Fetch a single row where OwnerAddress matches logedInUserEmail
+
     if (error) {
       console.error('Error fetching data:', error);
+      setHaverow(false);
     } else {
-      setTableData(data);
-      const owner = data.find(row => row.OwnerAddress === logedInUserEmail);
-      setHaverow(!!owner);
+      console.log('Fetched data:', data);
+      setTableData([data]); // Set the single row data into an array to be compatible with setTableData
+      setHaverow(!!data);
       console.log("logedInUserEmail is " + logedInUserEmail);
-      console.log("have row is " + !!owner);
+      console.log("have row is " + !!data);
     }
   };
+
 
 
   return (
@@ -737,17 +760,41 @@ function App() {
               <div>
                 <p>Welcome, {welcomeDisplayName}</p>
                 <div>
-                  <h4>Data from Supabase</h4>
-                  <ul>
-                    {tableData.map((row) => (
-                      <li key={row.id}>
-                        {row.OwnerAddress}, LID: {row.LeftID}, LP: {row.LeftPoint}, RID: {row.RightID}, RP: {row.RightPoint}, Referal: {row.ReferalAddress}, Points: {row.Points}
-                      </li>
-                    ))}
-                  </ul>
+                  <div>
+                    {haverow ? (
+                      <div>
+                        <ul>
+                          {tableData.map((row) => (
+                            <li key={row.id}>
+                              <div>
+                                <strong>Your Email:</strong> {row.OwnerAddress}
+                              </div>
+                              <div>
+                                <strong>Your Uppside:</strong> {row.ReferalAddress}
+                              </div>
+                              <div>
+                                <strong>Left Hand:</strong> {row.LeftID} ({row.LeftPoint})
+                              </div>
+                              <div>
+                                <strong>Right Hand:</strong> {row.RightID} ({row.RightPoint})
+                              </div>
+                              <div>
+                                <strong>Pro Hand:</strong> {row.ProID} ({row.ProPoint})
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+
+                        <button className="action-button" onClick={handleShare}>Share Referal</button>
+                      </div>
+                      
+                    ) : (
+                      <div>
+                        <button className="action-button" onClick={handleSendTransaction}>Buy Product</button>
+                      </div>)
+                    };
+                  </div>
                 </div>
-                <button className="action-button" onClick={handleSendTransaction}>Buy Product</button>
-                <button className="action-button" onClick={handleShare}>Share Referal</button>
                 {/* Share Dialog */}
                 {showShareDialog && (
                   <div className="dialog-overlay">
@@ -862,8 +909,8 @@ function App() {
         )}
         {page_n === 3 && (
           <div >
-            <label>Share_rate = {shareRate}</label><br/>
-            <label>Your Upper = {referal_Email_FromURL}</label><br/>
+            <label>Share_rate = {shareRate}</label><br />
+            <label>Your Upper = {referal_Email_FromURL}</label><br />
             <button className="action-button" onClick={updateUsersPoints}>1-Calculate real Points</button><br />
             <button className="action-button" onClick={updateShareRateInMaster}>2-Update share rate in master</button><br />
             <button className="action-button" onClick={handleSendPaybackOrder}>3-Payback</button><br />
