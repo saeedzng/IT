@@ -319,7 +319,7 @@ body {
 
 
 /* Input Fields */
-input[type="email"], input[type="password"] {
+input[type="email"], input[type="password"], input[type="text"] {
   width: 95%;
   padding: 10px;
   margin-bottom: 15px;
@@ -330,7 +330,7 @@ input[type="email"], input[type="password"] {
   text-align: center;
 }
 
-input[type="email"]:focus, input[type="password"]:focus {
+input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focus {
   outline: none;
   background-color: rgba(255, 255, 255, 0.3);
 }
@@ -354,6 +354,7 @@ button[type="submit"]:hover {
 .error-message {
   color: red;
 }
+
 
 
 @media (max-width: 768px) {

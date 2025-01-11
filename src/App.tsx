@@ -745,13 +745,18 @@ function App() {
       <div className="top-section">
         <div className="header">
           <div className="left">
-            <img src="./logo.png" alt="Logo" className="logo" onClick={() => setPageN(0)} />
+          {user ? (
+              <button onClick={handleSignOut} className="logout-button">Logout</button>
+             
+            ) : (
+              <img src="./logo.png" alt="Logo" className="logo" onClick={() => setPageN(0)} />
+            )}
           </div>
           <div className="right">
             <TonConnectButton />
-            {user && (
+            {/* {user && (
               <button onClick={handleSignOut} className="logout-button">Logout</button>
-            )}
+            )} */}
           </div>
         </div>
         <nav className="menu">
@@ -766,7 +771,7 @@ function App() {
           <div>
             {user ? (
               <div>
-                <p>Welcome, {welcomeDisplayName}</p>
+                <p>{/* Welcome, */} {welcomeDisplayName}</p>
                 <div>
                   {haverow ? (
                     <ul>
