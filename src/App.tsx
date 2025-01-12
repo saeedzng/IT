@@ -738,6 +738,14 @@ function App() {
     }
   };
 
+  function showNote(referralAddress: string) {
+    const note = document.getElementById('note');
+    note!.innerText = referralAddress;
+    const noteContainer = document.getElementById('note-container');
+    noteContainer!.style.display = 'block';
+    note!.classList.add('show');
+  }
+
 
 
   return (
@@ -745,9 +753,9 @@ function App() {
       <div className="top-section">
         <div className="header">
           <div className="left">
-          {user ? (
+            {user ? (
               <button onClick={handleSignOut} className="logout-button">Logout</button>
-             
+
             ) : (
               <img src="./logo.png" alt="Logo" className="logo" onClick={() => setPageN(0)} />
             )}
@@ -771,27 +779,50 @@ function App() {
           <div>
             {user ? (
               <div>
-                <p>{/* Welcome, */} {welcomeDisplayName}</p>
+                <p>Welcome   "{welcomeDisplayName}"</p>
                 <div>
                   {haverow ? (
-                    <ul>
-                      {tableData.map((row) => (
-                        <li key={row.id}>
-                          <div><strong>Your Email:</strong> {row.OwnerAddress}</div>
-                          <div><strong>Your Uppside:</strong> {row.ReferalAddress}</div>
-                          <div><strong>Left Hand:</strong> {row.LeftID} ({row.LeftPoint})</div>
-                          <div><strong>Right Hand:</strong> {row.RightID} ({row.RightPoint})</div>
-                          <div><strong>Pro Hand:</strong> {row.ProID} ({row.ProPoint})</div>
-                        </li>
-                      ))}
-                    </ul>
+                    <div>
+                      <ul className="info-card-list">
+                        {tableData.map((row) => (
+                          <li key={row.id}>
+                            <div className="info-card-container">
+                              <div className="info-card-solo">
+                                <strong>Your Email:</strong>
+                                <div className="info">{row.OwnerAddress}</div>
+                              </div>
+                              <div className="info-card-solo" onClick={() => showNote(row.ReferalAddress)}>
+                                <strong>Your Uppside:</strong> {row.ReferalAddress}
+                              </div>
+                              <div id="note-container" style={{ display: 'none' }}>
+                                <div id="note" className="note"></div>
+                              </div>
+                              <div className="info-card">
+                                <div className="info-part"><strong>First Hand:</strong></div>
+                                <div className="info-part">{row.LeftID}</div>
+                                <div className="info-part" style={{ textAlign: 'right' }}>{row.LeftPoint}</div>
+                              </div>
+                              <div className="info-card">
+                                <div className="info-part"><strong>Right Hand:</strong></div>
+                                <div className="info-part">{row.LeftID}</div>
+                                <div className="info-part" style={{ textAlign: 'right' }}>{row.RightPoint}</div>
+                              </div>
+                              <div className="info-card">
+                                <div className="info-part"><strong>Pro Hand:</strong></div>
+                                <div className="info-part">{row.ProID}</div>
+                                <div className="info-part" style={{ textAlign: 'right' }}>{row.ProPoint}</div>
+
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   ) : (
                     <button className="action-button" onClick={handleSendTransaction}>Buy Product</button>
                   )}
                 </div>
                 <button className="action-button" onClick={handleShare}>Share Referal</button>
-
-                {/* Share Dialog */}
                 {showShareDialog && (
                   <div className="dialog-overlay">
                     <div className="dialog-content">
@@ -817,6 +848,7 @@ function App() {
             )}
           </div>
         )}
+
 
         {page_n === 1 && (
           <div className="form-container">
