@@ -754,11 +754,21 @@ function App() {
         <div className="header">
           <div className="left">
             {user ? (
-              <button onClick={handleSignOut} className="logout-button">Logout</button>
-
+              <img
+                src="./logo.png"
+                alt="Logo"
+                className="logo logout-logo"
+                onClick={handleSignOut}
+              />
             ) : (
-              <img src="./logo.png" alt="Logo" className="logo" onClick={() => setPageN(0)} />
+              <img
+                src="./logo.png"
+                alt="Logo"
+                className="logo"
+                onClick={() => setPageN(0)}
+              />
             )}
+
           </div>
           <div className="right">
             <TonConnectButton />
@@ -807,12 +817,14 @@ function App() {
                                 <div className="info-part">{row.LeftID}</div>
                                 <div className="info-part" style={{ textAlign: 'right' }}>{row.RightPoint}</div>
                               </div>
-                              <div className="info-card">
-                                <div className="info-part"><strong>Pro Hand:</strong></div>
-                                <div className="info-part">{row.ProID}</div>
-                                <div className="info-part" style={{ textAlign: 'right' }}>{row.ProPoint}</div>
+                              {row.ProID && (
+                                <div className="info-card">
+                                  <div className="info-part"><strong>Pro Hand:</strong></div>
+                                  <div className="info-part">{row.ProID}</div>
+                                  <div className="info-part" style={{ textAlign: 'right' }}>{row.ProPoint}</div>
+                                </div>
+                              )}
 
-                              </div>
                             </div>
                           </li>
                         ))}
