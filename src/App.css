@@ -380,7 +380,7 @@ ul {
   padding: 5px;
   color: var(--text-color-light);
   background-color: var(--bg-body);
-  border: 1px solid #eee;
+  border: 1px solid #838383;
   border-radius: 5px;
   width: 95%;
   opacity: 0.9;
@@ -392,7 +392,7 @@ ul {
   padding: 5px;
   color: var(--text-color-light);
   background-color: var(--bg-body);
-  border: 1px solid #eee;
+  border: 1px solid #838383;
   border-radius: 5px;
   width: 95%;
   opacity: 0.9; /* Set opacity to 50% */
@@ -407,7 +407,6 @@ ul {
 .info-part {
   flex: 1;
   text-align: center;
-  
 }
 
 .note {
@@ -424,6 +423,38 @@ ul {
 .note.show {
   display: block;
 }
+
+.earn-points-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  width: 93%;
+}
+
+.earn-points-item {
+  text-align: center;
+  flex: 1;
+  margin: 0 10px;
+}
+
+.earn-points-value {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #4caf50;
+  margin-top: 5px;
+}
+
+.earn-points-container strong {
+  display: block;
+  font-size: 1.1em;
+  color: #333;
+}
+
 
 
 

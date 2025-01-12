@@ -789,7 +789,7 @@ function App() {
           <div>
             {user ? (
               <div>
-                <p>Welcome   "{welcomeDisplayName}"</p>
+                <h3>Welcome <strong>"{welcomeDisplayName}"</strong>  </h3>
                 <div>
                   {haverow ? (
                     <div>
@@ -824,30 +824,43 @@ function App() {
                                   <div className="info-part" style={{ textAlign: 'right' }}>{row.ProPoint}</div>
                                 </div>
                               )}
-
+                              <div className="earn-points-container">
+                                <div className="earn-points-item">
+                                  <strong>Earn:</strong>
+                                  <div className="earn-points-value">{row.TotalGain}</div>
+                                </div>
+                                <div className="earn-points-item">
+                                  <strong>Points:</strong>
+                                  <div className="earn-points-value">{row.Points}</div>
+                                </div>
+                              </div>
                             </div>
+
                           </li>
                         ))}
                       </ul>
-                    </div>
-                  ) : (
-                    <button className="action-button" onClick={handleSendTransaction}>Buy Product</button>
-                  )}
-                </div>
-                <button className="action-button" onClick={handleShare}>Share Referal</button>
-                {showShareDialog && (
-                  <div className="dialog-overlay">
-                    <div className="dialog-content">
-                      <h2>Your browser does not support sharing.</h2>
-                      <p>Please copy the link below and share it manually:</p>
-                      <label>{shareUrl}</label>
-                      <div className="dialog-buttons">
-                        <button onClick={copyToClipboard}>Copy Link</button>
-                        <button onClick={closeShareDialog}>Close</button>
+                      <div>
+                        <button className="action-button" onClick={handleShare}>Share Referal</button>
+                        {showShareDialog && (
+                          <div className="dialog-overlay">
+                            <div className="dialog-content">
+                              <h2>Your browser does not support sharing.</h2>
+                              <p>Please copy the link below and share it manually:</p>
+                              <label>{shareUrl}</label>
+                              <div className="dialog-buttons">
+                                <button onClick={copyToClipboard}>Copy Link</button>
+                                <button onClick={closeShareDialog}>Close</button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <button className="action-button" style={{ marginTop: '40px' }} onClick={handleSendTransaction}>Buy Product</button>
+                  )}
+                </div>
+
               </div>
             ) : (
               <div>
