@@ -378,8 +378,8 @@ ul {
 .info-card {
   margin: 10px 0;
   padding: 5px;
-  color: var(--text-color-light);
-  background-color: var(--bg-body);
+  color: #4caf50;
+  background-color: #f0f0f0;
   border: 1px solid #838383;
   border-radius: 5px;
   width: 95%;
@@ -390,23 +390,28 @@ ul {
 .info-card-solo {
   margin: 10px 0;
   padding: 5px;
-  color: var(--text-color-light);
-  background-color: var(--bg-body);
+  color: #4caf50;
+  background-color:  #f0f0f0; 
   border: 1px solid #838383;
   border-radius: 5px;
   width: 95%;
   opacity: 0.9; /* Set opacity to 50% */
 }
 
-.info-card strong {
-  color: var(--text-color-light);
+.info-card strong  {
+  color: #333;
+  font-weight: bold;
+}
+
+.info-card-solo strong  {
+  color: #333;
   font-weight: bold;
 }
 
 /* Info Part */
 .info-part {
   flex: 1;
-  text-align: center;
+  text-align: left;
 }
 
 .note {

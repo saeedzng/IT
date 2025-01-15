@@ -808,12 +808,12 @@ function App() {
                                 <div id="note" className="note"></div>
                               </div>
                               <div className="info-card">
-                                <div className="info-part"><strong>First Hand:</strong></div>
+                                <div className="info-part"><strong>Begin Hand:</strong></div>
                                 <div className="info-part">{row.LeftID}</div>
                                 <div className="info-part" style={{ textAlign: 'right' }}>{row.LeftPoint}</div>
                               </div>
                               <div className="info-card">
-                                <div className="info-part"><strong>Right Hand:</strong></div>
+                                <div className="info-part"><strong>Balance Hand:</strong></div>
                                 <div className="info-part">{row.LeftID}</div>
                                 <div className="info-part" style={{ textAlign: 'right' }}>{row.RightPoint}</div>
                               </div>
