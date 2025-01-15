@@ -210,7 +210,7 @@ function App() {
           messages: [
             {
               address: "kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG",
-              amount: "10000000",
+              amount: "20000000",
               payload: datacell.toBoc().toString("base64"),
             }
           ]
@@ -354,7 +354,7 @@ function App() {
 
 
 
-  const handleSendTransaction = async () => {
+  const handleSendTransaction = async (payment : string) => {
     if (!user) {
       WebApp.showAlert('You Must Log in');
       console.error('You Must Log in');
@@ -373,12 +373,12 @@ function App() {
       return;
     }
 
-    await handleCerateransaction()
+    await handleCerateransaction(payment)
   };
 
 
 
-  const handleCerateransaction = async () => {
+  const handleCerateransaction = async (price : string) => {
     try {
 
       let datacellBuilder = beginCell()
@@ -391,7 +391,7 @@ function App() {
         messages: [
           {
             address: "kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG",
-            amount: "10000000",
+            amount: price,
             payload: datacell.toBoc().toString("base64"),
           }
         ]
@@ -857,7 +857,17 @@ function App() {
                       </div>
                     </div>
                   ) : (
-                    <button className="action-button" style={{ marginTop: '40px' }} onClick={handleSendTransaction}>Buy Product</button>
+                    <div className="button-container">
+                      <div className="buy-row">
+                        {/* <div className="buy-label">
+                          <label>Buy Chicken</label>
+                        </div> */}
+                        <div className="button-row">
+                        <button className="action-button" style={{ marginTop: '40px' }} onClick={ () => handleSendTransaction("10000000")}>Get Loan</button>
+                        <button className="action-button" style={{ marginTop: '40px' }} onClick={ () => handleSendTransaction("20000000")}>Buy Product</button>
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
 
