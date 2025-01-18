@@ -578,7 +578,7 @@ function App() {
         return userData;
       } else {
         console.log('RightID and LeftID have values, but TotalGain is insufficient:', { RightID, LeftID, TotalGain });
-        WebApp.showAlert('NOTHING UPDATED. TotalGain is insufficient: ' + JSON.stringify({ RightID, LeftID, TotalGain }));
+        WebApp.showAlert('Your introducer is not allowed to start new hand. ask help from your mentor. ' + JSON.stringify({ RightID, LeftID, TotalGain }));
         return;
       }
     }
