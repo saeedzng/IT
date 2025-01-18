@@ -166,44 +166,45 @@ function App() {
       // Fetch the first three users with Points greater than zero
       const { data: users, error: fetchError } = await supabase
         .from('Users')
-        .select('TonAddress, Points, TotalGain')
+        .select('OwnerAddress, TonAddress, Points, TotalGain')
         .gt('Points', 0)
         .limit(3);
-
+  
       if (fetchError) {
         throw new Error(`Error fetching users: ${fetchError.message}`);
       }
-
+  
       if (users.length === 0) {
         console.log('No users with Points greater than 0 found.');
         WebApp.showAlert('No users with Points greater than 0 found.');
         return;
       }
-
+  
       // Create user array
       const userArray = users.map(user => ({
+        OwnerAddress: user.OwnerAddress,
         TonAddress: user.TonAddress,
         Points: user.Points,
         TotalGain: user.TotalGain
       }));
-
+  
       console.log('Users fetched:', userArray);
-
+  
       // Create the datacell for the current batch
       let datacellBuilder = beginCell()
         .storeUint(3, 32) // Indicates the type of transaction
         .storeUint(userArray.length, 32); // Number of users in the current batch
-
+  
       // Add each user's address and points to the datacell
       userArray.forEach(user => {
         datacellBuilder
           .storeAddress(Address.parse(user.TonAddress))
           .storeCoins(user.Points);
       });
-
+  
       const datacell = datacellBuilder.endCell();
       console.log('Datacell created:', datacell.toString());
-
+  
       try {
         const result = await tonConnectUI.sendTransaction({
           validUntil: Date.now() + 5 * 60 * 1000, // Transaction valid for 5 minutes
@@ -215,33 +216,33 @@ function App() {
             }
           ]
         });
-
+  
         if (result) {
           console.log('Transaction successful:', result);
-
+  
           // Update Points and TotalGain for the current batch of users
           const updates = userArray.map(user => ({
-            TonAddress: user.TonAddress,
+            OwnerAddress: user.OwnerAddress,
             Points: 0, // Reset Points to zero after transaction
             TotalGain: user.TotalGain + (shareRate * user.Points)
           }));
-
+  
           console.log('Updates prepared:', updates);
-
+  
           for (const user of updates) {
             const { error: updateError } = await supabase
               .from('Users')
               .update({ Points: user.Points, TotalGain: user.TotalGain })
-              .eq('TonAddress', user.TonAddress);
-
+              .eq('OwnerAddress', user.OwnerAddress);
+  
             if (updateError) {
-              throw new Error(`Error updating user ${user.TonAddress}: ${updateError.message}`);
+              throw new Error(`Error updating user ${user.OwnerAddress}: ${updateError.message}`);
             }
-
-            console.log(`User ${user.TonAddress} updated successfully: Points set to 0, TotalGain updated to ${user.TotalGain}`);
+  
+            console.log(`User ${user.OwnerAddress} updated successfully: Points set to 0, TotalGain updated to ${user.TotalGain}`);
           }
-
-          const transactionDetails = updates.map(user => `TonAddress: ${user.TonAddress}, Points: 0, TotalGain: ${user.TotalGain}`).join('; ');
+  
+          const transactionDetails = updates.map(user => `OwnerAddress: ${user.OwnerAddress}, Points: 0, TotalGain: ${user.TotalGain}`).join('; ');
           console.log('All users updated successfully.');
           WebApp.showAlert(`Transaction successful for ${userArray.length} users. Details: ${transactionDetails}`);
         }
@@ -249,15 +250,16 @@ function App() {
         console.error('Error sending transaction:', error);
         WebApp.showAlert(`Error sending transaction: ${error}`);
       }
-
+  
     } catch (error) {
       console.error('Error processing user points:', error);
       WebApp.showAlert(`Error processing user points: ${error}`);
     }
-
+  
     // Fetch updated data
     await fetchData();
   }
+  
 
 
 
@@ -326,7 +328,7 @@ function App() {
             const { error: updateError } = await supabase
               .from('Users')
               .update({ ProGain: user.ProGain, ProPoint: user.ProPoint })
-              .eq('TonAddress', user.TonAddress);
+              .eq('OwnerAddress', user.OwnerAddress);
 
             if (updateError) {
               throw new Error(`Error updating user ${user.OwnerAddress}: ${updateError.message}`);
@@ -578,7 +580,7 @@ function App() {
         return userData;
       } else {
         console.log('RightID and LeftID have values, but TotalGain is insufficient:', { RightID, LeftID, TotalGain });
-        WebApp.showAlert('Your introducer is not allowed to start new hand. ask help from your mentor. ' + JSON.stringify({ RightID, LeftID, TotalGain }));
+        WebApp.showAlert('Your introducer is not allowed to start new hand. ask help from your mentor.');
         return;
       }
     }
