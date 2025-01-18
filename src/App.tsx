@@ -396,6 +396,7 @@ function App() {
           }
         ]
       });
+     
       setTransactionResult(result);
     } catch (error) {
       console.error("Transaction failed:", error);
