@@ -351,13 +351,7 @@ function App() {
 
 
 
-
-
-
-
-
-
-  const handleSendTransaction = async (payment : string) => {
+  const handleBuyProduct = async () => {
     WebApp.showAlert(logedInUserTonAddress);
     if (!user) {
       WebApp.showAlert('You Must Log in');
@@ -382,7 +376,35 @@ function App() {
       return;
     }
 
-    await handleCerateransaction(payment)
+    await handleCerateransaction("20000000")
+  };
+
+  const handleGetLoan = async () => {
+    WebApp.showAlert(logedInUserTonAddress);
+    if (!user) {
+      WebApp.showAlert('You Must Log in');
+      console.error('You Must Log in');
+      return;
+    }
+    if (!logedInUserTonAddress) {
+      WebApp.showAlert('You Must Connect Your Wallet');
+      console.error('You Must Connect Your Wallet');
+      return;
+    }
+    if (haverow) {
+      WebApp.showAlert('You have already purchased the product.');
+      console.error('You have already purchased the product.');
+      return;
+    }
+    const result = await handleCheckReferalisNull();
+    // If result is undefined (RightID and LeftID are not null or empty), exit the function
+    if (!result) {
+      WebApp.showAlert('Your Upper Has Right Hand And Left Hand And Not Allowed To Strart Pro Hand.');
+      console.error('Your Upper Has Right Hand And Left Hand.');
+      return;
+    }
+
+    await handleCerateransaction("10000000")
   };
 
 
@@ -934,8 +956,8 @@ function App() {
                           <label>Buy Chicken</label>
                         </div> */}
                         <div className="button-row">
-                        <button className="action-button" style={{ marginTop: '40px' }} onClick={ () => handleSendTransaction("10000000")}>Get Loan</button>
-                        <button className="action-button" style={{ marginTop: '40px' }} onClick={ () => handleSendTransaction("20000000")}>Buy Product</button>
+                        <button className="action-button" style={{ marginTop: '40px' }} onClick={ handleGetLoan}>Get Loan</button>
+                        <button className="action-button" style={{ marginTop: '40px' }} onClick={ handleBuyProduct}>Buy Product</button>
                         </div>
                       </div>
                     </div>
