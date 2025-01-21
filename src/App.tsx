@@ -358,6 +358,7 @@ function App() {
 
 
   const handleSendTransaction = async (payment : string) => {
+    WebApp.showAlert(logedInUserTonAddress);
     if (!user) {
       WebApp.showAlert('You Must Log in');
       console.error('You Must Log in');
