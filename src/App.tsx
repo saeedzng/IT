@@ -170,17 +170,17 @@ function App() {
         .select('OwnerAddress, TonAddress, Points, TotalGain')
         .gt('Points', 0)
         .limit(3);
-  
+
       if (fetchError) {
         throw new Error(`Error fetching users: ${fetchError.message}`);
       }
-  
+
       if (users.length === 0) {
         console.log('No users with Points greater than 0 found.');
         WebApp.showAlert('No users with Points greater than 0 found.');
         return;
       }
-  
+
       // Create user array
       const userArray = users.map(user => ({
         OwnerAddress: user.OwnerAddress,
@@ -188,24 +188,24 @@ function App() {
         Points: user.Points,
         TotalGain: user.TotalGain
       }));
-  
+
       console.log('Users fetched:', userArray);
-  
+
       // Create the datacell for the current batch
       let datacellBuilder = beginCell()
         .storeUint(3, 32) // Indicates the type of transaction
         .storeUint(userArray.length, 32); // Number of users in the current batch
-  
+
       // Add each user's address and points to the datacell
       userArray.forEach(user => {
         datacellBuilder
           .storeAddress(Address.parse(user.TonAddress))
           .storeCoins(user.Points);
       });
-  
+
       const datacell = datacellBuilder.endCell();
       console.log('Datacell created:', datacell.toString());
-  
+
       try {
         const result = await tonConnectUI.sendTransaction({
           validUntil: Date.now() + 5 * 60 * 1000, // Transaction valid for 5 minutes
@@ -217,32 +217,32 @@ function App() {
             }
           ]
         });
-  
+
         if (result) {
           console.log('Transaction successful:', result);
-  
+
           // Update Points and TotalGain for the current batch of users
           const updates = userArray.map(user => ({
             OwnerAddress: user.OwnerAddress,
             Points: 0, // Reset Points to zero after transaction
             TotalGain: user.TotalGain + (shareRate * user.Points)
           }));
-  
+
           console.log('Updates prepared:', updates);
-  
+
           for (const user of updates) {
             const { error: updateError } = await supabase
               .from('Users')
               .update({ Points: user.Points, TotalGain: user.TotalGain })
               .eq('OwnerAddress', user.OwnerAddress);
-  
+
             if (updateError) {
               throw new Error(`Error updating user ${user.OwnerAddress}: ${updateError.message}`);
             }
-  
+
             console.log(`User ${user.OwnerAddress} updated successfully: Points set to 0, TotalGain updated to ${user.TotalGain}`);
           }
-  
+
           const transactionDetails = updates.map(user => `OwnerAddress: ${user.OwnerAddress}, Points: 0, TotalGain: ${user.TotalGain}`).join('; ');
           console.log('All users updated successfully.');
           WebApp.showAlert(`Transaction successful for ${userArray.length} users. Details: ${transactionDetails}`);
@@ -251,16 +251,16 @@ function App() {
         console.error('Error sending transaction:', error);
         WebApp.showAlert(`Error sending transaction: ${error}`);
       }
-  
+
     } catch (error) {
       console.error('Error processing user points:', error);
       WebApp.showAlert(`Error processing user points: ${error}`);
     }
-  
+
     // Fetch updated data
     await fetchData();
   }
-  
+
 
 
 
@@ -352,36 +352,28 @@ function App() {
 
 
   const handleBuyProduct = async () => {
-    // WebApp.showAlert(logedInUserTonAddress);
-    if (!user) {
-      WebApp.showAlert('You Must Log in');
-      console.error('You Must Log in');
-      return;
-    }
-    const logedInTonAddress = useTonAddress();
-    if (!logedInTonAddress) {
-      WebApp.showAlert('You Must Connect Your Wallet');
-      console.error('You Must Connect Your Wallet');
-      return;
-    }
-    if (haverow) {
-      WebApp.showAlert('You have already purchased the product.');
-      console.error('You have already purchased the product.');
-      return;
-    }
-    const result = await handleCheckReferalisNull();
-    // If result is undefined (RightID and LeftID are not null or empty), exit the function
-    if (!result) {
-      WebApp.showAlert('Your Upper Has Right Hand And Left Hand And Not Allowed To Strart Pro Hand.');
-      console.error('Your Upper Has Right Hand And Left Hand.');
-      return;
+    console.log('Starting handleBuyProduct function...');
+    console.log('Logged In Ton Address:', logedInUserTonAddress);
+
+    try {
+      if (!logedInUserTonAddress) {
+        console.log('Wallet is not connected...');
+        console.error('You Must Connect Your Wallet');
+        WebApp.showAlert('You Must Connect Your Wallet');
+
+        return;
+      }
+    } catch (error) {
+      console.error('An error occurred:', error);
     }
 
-    await handleCerateransaction("20000000")
+    console.log('Function completed without errors.');
   };
 
+
+
   const handleGetLoan = async () => {
-    WebApp.showAlert(" this is " + logedInUserTonAddress);
+    // WebApp.showAlert(" this is " + logedInUserTonAddress);
     if (!user) {
       WebApp.showAlert('You Must Log in');
       console.error('You Must Log in');
@@ -410,7 +402,7 @@ function App() {
 
 
 
-  const handleCerateransaction = async (price : string) => {
+  const handleCerateransaction = async (price: string) => {
     try {
 
       let datacellBuilder = beginCell()
@@ -428,7 +420,7 @@ function App() {
           }
         ]
       });
-      setBuy10Percent((Number(price)/10))
+      setBuy10Percent((Number(price) / 10))
       setTransactionResult(result);
     } catch (error) {
       console.error("Transaction failed:", error);
@@ -448,60 +440,60 @@ function App() {
       updateReferalTotalGain();
     }
   }, [buy10Percent]);
-  
+
 
 
   const updateReferalTotalGain = async () => {
     let ownerAddress: string | null = logedInUserEmail;
     const { data: userData, error: userError } = await supabase
-        .from('Users')
-        .select('ReferalAddress')
-        .eq('OwnerAddress', ownerAddress)
-        .single();
+      .from('Users')
+      .select('ReferalAddress')
+      .eq('OwnerAddress', ownerAddress)
+      .single();
 
     if (userError) {
-        console.error('Error fetching user:', userError);
-        return;
+      console.error('Error fetching user:', userError);
+      return;
     }
 
     if (userData) {
-        const referalAddress = userData.ReferalAddress;
+      const referalAddress = userData.ReferalAddress;
 
-        // Fetch the user's TotalGain where OwnerAddress matches the ReferalAddress
-        const { data: referalUserData, error: referalUserError } = await supabase
-            .from('Users')
-            .select('TotalGain')
-            .eq('OwnerAddress', referalAddress)
-            .single();
+      // Fetch the user's TotalGain where OwnerAddress matches the ReferalAddress
+      const { data: referalUserData, error: referalUserError } = await supabase
+        .from('Users')
+        .select('TotalGain')
+        .eq('OwnerAddress', referalAddress)
+        .single();
 
-        if (referalUserError) {
-            console.error('Error fetching referal user:', referalUserError);
-            return;
+      if (referalUserError) {
+        console.error('Error fetching referal user:', referalUserError);
+        return;
+      }
+
+      if (referalUserData) {
+        const newTotalGain = referalUserData.TotalGain + buy10Percent;
+
+        // Update the TotalGain in the Users table where OwnerAddress matches the ReferalAddress
+        const { error: updateError } = await supabase
+          .from('Users')
+          .update({ TotalGain: newTotalGain })
+          .eq('OwnerAddress', referalAddress);
+
+        if (updateError) {
+          console.error('Error updating TotalGain:', updateError);
+          return;
         }
 
-        if (referalUserData) {
-            const newTotalGain = referalUserData.TotalGain + buy10Percent;
-
-            // Update the TotalGain in the Users table where OwnerAddress matches the ReferalAddress
-            const { error: updateError } = await supabase
-                .from('Users')
-                .update({ TotalGain: newTotalGain })
-                .eq('OwnerAddress', referalAddress);
-
-            if (updateError) {
-                console.error('Error updating TotalGain:', updateError);
-                return;
-            }
-
-            console.log(`TotalGain for ${referalAddress} is now ${newTotalGain}`);
-            setBuy10Percent(0)
-        } else {
-            console.error('Referal user not found');
-        }
+        console.log(`TotalGain for ${referalAddress} is now ${newTotalGain}`);
+        setBuy10Percent(0)
+      } else {
+        console.error('Referal user not found');
+      }
     } else {
-        console.error('User not found');
+      console.error('User not found');
     }
-};
+  };
 
 
 
@@ -921,7 +913,7 @@ function App() {
                               <div className="earn-points-container">
                                 <div className="earn-points-item">
                                   <strong>Earn:</strong>
-                                  <div className="earn-points-value">{(row.TotalGain/1000000000)}</div>
+                                  <div className="earn-points-value">{(row.TotalGain / 1000000000)}</div>
                                 </div>
                                 <div className="earn-points-item">
                                   <strong>Points:</strong>
@@ -957,8 +949,8 @@ function App() {
                           <label>Buy Chicken</label>
                         </div> */}
                         <div className="button-row">
-                        <button className="action-button" style={{ marginTop: '40px' }} onClick={ handleGetLoan}>Get Loan</button>
-                        <button className="action-button" style={{ marginTop: '40px' }} onClick={ handleBuyProduct}>Buy Product</button>
+                          <button className="action-button" style={{ marginTop: '40px' }} onClick={handleGetLoan}>Get Loan</button>
+                          <button className="action-button" style={{ marginTop: '40px' }} onClick={handleBuyProduct}>Buy Product</button>
                         </div>
                       </div>
                     </div>
