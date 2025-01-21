@@ -380,7 +380,7 @@ function App() {
   };
 
   const handleGetLoan = async () => {
-    WebApp.showAlert(logedInUserTonAddress);
+    WebApp.showAlert(" this is " + logedInUserTonAddress);
     if (!user) {
       WebApp.showAlert('You Must Log in');
       console.error('You Must Log in');
