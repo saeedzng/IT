@@ -352,28 +352,6 @@ function App() {
 
 
   const handleBuyProduct = async () => {
-    console.log('Starting handleBuyProduct function...');
-    console.log('Logged In Ton Address:', logedInUserTonAddress);
-
-    try {
-      if (!logedInUserTonAddress) {
-        console.log('Wallet is not connected...');
-        console.error('You Must Connect Your Wallet');
-        WebApp.showAlert('You Must Connect Your Wallet');
-
-        return;
-      }
-    } catch (error) {
-      console.error('An error occurred:', error);
-    }
-
-    console.log('Function completed without errors.');
-  };
-
-
-
-  const handleGetLoan = async () => {
-    // WebApp.showAlert(" this is " + logedInUserTonAddress);
     if (!user) {
       WebApp.showAlert('You Must Log in');
       console.error('You Must Log in');
@@ -390,13 +368,38 @@ function App() {
       return;
     }
     const result = await handleCheckReferalisNull();
-    // If result is undefined (RightID and LeftID are not null or empty), exit the function
     if (!result) {
       WebApp.showAlert('Your Upper Has Right Hand And Left Hand And Not Allowed To Strart Pro Hand.');
       console.error('Your Upper Has Right Hand And Left Hand.');
       return;
     }
+    await handleCerateransaction("20000000")
+  };
 
+
+
+  const handleGetLoan = async () => {
+    if (!user) {
+      WebApp.showAlert('You Must Log in');
+      console.error('You Must Log in');
+      return;
+    }
+    if (!logedInUserTonAddress) {
+      WebApp.showAlert('You Must Connect Your Wallet');
+      console.error('You Must Connect Your Wallet');
+      return;
+    }
+    if (haverow) {
+      WebApp.showAlert('You have already purchased the product.');
+      console.error('You have already purchased the product.');
+      return;
+    }
+    const result = await handleCheckReferalisNull();
+    if (!result) {
+      WebApp.showAlert('Your Upper Has Right Hand And Left Hand And Not Allowed To Strart Pro Hand.');
+      console.error('Your Upper Has Right Hand And Left Hand.');
+      return;
+    }
     await handleCerateransaction("10000000")
   };
 
