@@ -352,13 +352,14 @@ function App() {
 
 
   const handleBuyProduct = async () => {
-    WebApp.showAlert(logedInUserTonAddress);
+    // WebApp.showAlert(logedInUserTonAddress);
     if (!user) {
       WebApp.showAlert('You Must Log in');
       console.error('You Must Log in');
       return;
     }
-    if (!logedInUserTonAddress) {
+    const logedInTonAddress = useTonAddress();
+    if (!logedInTonAddress) {
       WebApp.showAlert('You Must Connect Your Wallet');
       console.error('You Must Connect Your Wallet');
       return;
