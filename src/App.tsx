@@ -34,6 +34,7 @@ function App() {
   const [shareUrl, setShareUrl] = useState("");
   const logedInUserTonAddress = useTonAddress();
   const [shareRate, setShareRate] = useState(0);
+  const [buy10Percent, setBuy10Percent] = useState(0);
 
 
 
@@ -211,7 +212,7 @@ function App() {
           messages: [
             {
               address: "kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG",
-              amount: "20000000",
+              amount: "10000000",
               payload: datacell.toBoc().toString("base64"),
             }
           ]
@@ -362,6 +363,11 @@ function App() {
       console.error('You Must Log in');
       return;
     }
+    if (!logedInUserTonAddress) {
+      WebApp.showAlert('You Must Connect Your Wallet');
+      console.error('You Must Connect Your Wallet');
+      return;
+    }
     if (haverow) {
       WebApp.showAlert('You have already purchased the product.');
       console.error('You have already purchased the product.');
@@ -398,7 +404,7 @@ function App() {
           }
         ]
       });
-     
+      setBuy10Percent((Number(price)/10))
       setTransactionResult(result);
     } catch (error) {
       console.error("Transaction failed:", error);
@@ -412,6 +418,67 @@ function App() {
       handleBuyPointForUppers();
     }
   }, [transactionResult]);
+
+  useEffect(() => {
+    if (buy10Percent !== 0) {
+      updateReferalTotalGain();
+    }
+  }, [buy10Percent]);
+  
+
+
+  const updateReferalTotalGain = async () => {
+    let ownerAddress: string | null = logedInUserEmail;
+    const { data: userData, error: userError } = await supabase
+        .from('Users')
+        .select('ReferalAddress')
+        .eq('OwnerAddress', ownerAddress)
+        .single();
+
+    if (userError) {
+        console.error('Error fetching user:', userError);
+        return;
+    }
+
+    if (userData) {
+        const referalAddress = userData.ReferalAddress;
+
+        // Fetch the user's TotalGain where OwnerAddress matches the ReferalAddress
+        const { data: referalUserData, error: referalUserError } = await supabase
+            .from('Users')
+            .select('TotalGain')
+            .eq('OwnerAddress', referalAddress)
+            .single();
+
+        if (referalUserError) {
+            console.error('Error fetching referal user:', referalUserError);
+            return;
+        }
+
+        if (referalUserData) {
+            const newTotalGain = referalUserData.TotalGain + buy10Percent;
+
+            // Update the TotalGain in the Users table where OwnerAddress matches the ReferalAddress
+            const { error: updateError } = await supabase
+                .from('Users')
+                .update({ TotalGain: newTotalGain })
+                .eq('OwnerAddress', referalAddress);
+
+            if (updateError) {
+                console.error('Error updating TotalGain:', updateError);
+                return;
+            }
+
+            console.log(`TotalGain for ${referalAddress} is now ${newTotalGain}`);
+            setBuy10Percent(0)
+        } else {
+            console.error('Referal user not found');
+        }
+    } else {
+        console.error('User not found');
+    }
+};
+
 
 
   useEffect(() => {
@@ -574,7 +641,7 @@ function App() {
     }
     const { OwnerAddress, RightID, LeftID, TotalGain, ProID } = userData;
     if (RightID && RightID !== '' && LeftID && LeftID !== '') {
-      if (TotalGain >= 20000) {
+      if (TotalGain >= 20000000000000) {
         console.log('RightID and LeftID have values, TotalGain is sufficient:', { RightID, LeftID, TotalGain, ProID });
         // WebApp.showAlert('RightID and LeftID have values, TotalGain is sufficient: ' + JSON.stringify({ RightID, LeftID, TotalGain, ProID }));
         return userData;
@@ -630,7 +697,7 @@ function App() {
         } else {
           console.log('LeftID updated to', user!.email);
         }
-      } else if (TotalGain >= 20000 && (!ProID || ProID === '')) {
+      } else if (TotalGain >= 20000000000000 && (!ProID || ProID === '')) {
         // If both RightID and LeftID have values, TotalGain is greater than or equal to 20000, and ProID is null or empty, update ProID with the logged-in user's email
         const { error: updateError } = await supabase
           .from('Users')
@@ -830,7 +897,7 @@ function App() {
                               <div className="earn-points-container">
                                 <div className="earn-points-item">
                                   <strong>Earn:</strong>
-                                  <div className="earn-points-value">{row.TotalGain}</div>
+                                  <div className="earn-points-value">{(row.TotalGain/1000000000)}</div>
                                 </div>
                                 <div className="earn-points-item">
                                   <strong>Points:</strong>
