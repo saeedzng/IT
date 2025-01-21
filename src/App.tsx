@@ -440,7 +440,7 @@ function App() {
 
   useEffect(() => {
     if (buy10Percent !== 0) {
-      updateReferalTotalGain();
+       updateReferalTotalGain();
     }
   }, [buy10Percent]);
 
@@ -489,7 +489,7 @@ function App() {
         }
 
         console.log(`TotalGain for ${referalAddress} is now ${newTotalGain}`);
-        setBuy10Percent(0)
+
       } else {
         console.error('Referal user not found');
       }
