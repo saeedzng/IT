@@ -35,6 +35,8 @@ function App() {
   const logedInUserTonAddress = useTonAddress();
   const [shareRate, setShareRate] = useState(0);
   const [buy10Percent, setBuy10Percent] = useState(0);
+  const [userHierarchy, setUserHierarchy] = useState<string[]>([]);
+
 
 
 
@@ -44,6 +46,10 @@ function App() {
     if (ReferalIDFromUrl) {
       setReferal_ID_FromURL(Number(ReferalIDFromUrl)); // Ensure it's a number
       ConvertReferalIDToReferalEmail(Number(ReferalIDFromUrl)); // Pass the value directly to the function
+    }
+    if (!ReferalIDFromUrl) {
+      setReferal_ID_FromURL(Number(1)); // Ensure it's a number
+      ConvertReferalIDToReferalEmail(Number(1)); // Pass the value directly to the function
     }
   }, []);
 
@@ -181,12 +187,13 @@ function App() {
         return;
       }
 
-      // Create user array
+      // Create user array with gain calculations
       const userArray = users.map(user => ({
         OwnerAddress: user.OwnerAddress,
         TonAddress: user.TonAddress,
         Points: user.Points,
-        TotalGain: user.TotalGain
+        TotalGain: user.TotalGain,
+        GainAmount: shareRate * user.Points // Calculate gain amount
       }));
 
       console.log('Users fetched:', userArray);
@@ -221,29 +228,26 @@ function App() {
         if (result) {
           console.log('Transaction successful:', result);
 
-          // Update Points and TotalGain for the current batch of users
-          const updates = userArray.map(user => ({
-            OwnerAddress: user.OwnerAddress,
-            Points: 0, // Reset Points to zero after transaction
-            TotalGain: user.TotalGain + (shareRate * user.Points)
-          }));
-
-          console.log('Updates prepared:', updates);
-
-          for (const user of updates) {
+          // Update Points, TotalGain, and LastGain for the users
+          for (const user of userArray) {
+            const updatedTotalGain = user.TotalGain + user.GainAmount;
             const { error: updateError } = await supabase
               .from('Users')
-              .update({ Points: user.Points, TotalGain: user.TotalGain })
+              .update({
+                Points: 0, // Reset Points to zero after transaction
+                TotalGain: updatedTotalGain,
+                LastGain: user.GainAmount // Store gain amount
+              })
               .eq('OwnerAddress', user.OwnerAddress);
 
             if (updateError) {
               throw new Error(`Error updating user ${user.OwnerAddress}: ${updateError.message}`);
             }
 
-            console.log(`User ${user.OwnerAddress} updated successfully: Points set to 0, TotalGain updated to ${user.TotalGain}`);
+            console.log(`User ${user.OwnerAddress} updated successfully: Points set to 0, TotalGain updated to ${updatedTotalGain}, LastGain set to ${user.GainAmount}`);
           }
 
-          const transactionDetails = updates.map(user => `OwnerAddress: ${user.OwnerAddress}, Points: 0, TotalGain: ${user.TotalGain}`).join('; ');
+          const transactionDetails = userArray.map(user => `OwnerAddress: ${user.OwnerAddress}, Points: 0, TotalGain: ${user.TotalGain + user.GainAmount}, LastGain: ${user.GainAmount}`).join('; ');
           console.log('All users updated successfully.');
           WebApp.showAlert(`Transaction successful for ${userArray.length} users. Details: ${transactionDetails}`);
         }
@@ -260,6 +264,7 @@ function App() {
     // Fetch updated data
     await fetchData();
   }
+
 
 
 
@@ -423,7 +428,9 @@ function App() {
           }
         ]
       });
-      setBuy10Percent((Number(price) / 10))
+      if (price === "10000000") setBuy10Percent(1000000);
+      if (price === "20000000") setBuy10Percent(2000000);
+
       setTransactionResult(result);
     } catch (error) {
       console.error("Transaction failed:", error);
@@ -433,40 +440,20 @@ function App() {
 
   useEffect(() => {
     if (transactionResult !== null) {
-      console.log("Transactin Confrimed");
+      console.log("Transaction Confirmed");
       handleBuyPointForUppers();
     }
   }, [transactionResult]);
 
-  useEffect(() => {
-    if (buy10Percent !== 0) {
-       updateReferalTotalGain();
-    }
-  }, [buy10Percent]);
 
 
 
-  const updateReferalTotalGain = async () => {
-    let ownerAddress: string | null = logedInUserEmail;
-    const { data: userData, error: userError } = await supabase
-      .from('Users')
-      .select('ReferalAddress')
-      .eq('OwnerAddress', ownerAddress)
-      .single();
-
-    if (userError) {
-      console.error('Error fetching user:', userError);
-      return;
-    }
-
-    if (userData) {
-      const referalAddress = userData.ReferalAddress;
-
-      // Fetch the user's TotalGain where OwnerAddress matches the ReferalAddress
+  const updateReferalTotalGain = async (ownerAddress: string) => {
+    try {
       const { data: referalUserData, error: referalUserError } = await supabase
         .from('Users')
         .select('TotalGain')
-        .eq('OwnerAddress', referalAddress)
+        .eq('OwnerAddress', ownerAddress)
         .single();
 
       if (referalUserError) {
@@ -477,26 +464,25 @@ function App() {
       if (referalUserData) {
         const newTotalGain = referalUserData.TotalGain + buy10Percent;
 
-        // Update the TotalGain in the Users table where OwnerAddress matches the ReferalAddress
         const { error: updateError } = await supabase
           .from('Users')
           .update({ TotalGain: newTotalGain })
-          .eq('OwnerAddress', referalAddress);
+          .eq('OwnerAddress', ownerAddress);
 
         if (updateError) {
           console.error('Error updating TotalGain:', updateError);
           return;
         }
 
-        console.log(`TotalGain for ${referalAddress} is now ${newTotalGain}`);
-
+        console.log(`TotalGain for ${ownerAddress} is now ${newTotalGain}`);
       } else {
         console.error('Referal user not found');
       }
-    } else {
-      console.error('User not found');
+    } catch (error) {
+      console.error('Error in updateReferalTotalGain:', error);
     }
   };
+
 
 
 
@@ -739,41 +725,62 @@ function App() {
 
 
 
+
+
   const handleBuyPointForUppers = async () => {
     await handleCreateNewRowInUserstbl();
     let ownerAddress: string | null = logedInUserEmail;
     let referalAddress: string | null;
+
+    // Fetch the initial referalAddress
     const { data: referalData, error: referalError } = await supabase
       .from('Users')
       .select('ReferalAddress')
       .eq('OwnerAddress', ownerAddress)
       .single();
+
     if (referalError) {
       console.error('Error fetching ReferalAddress:', referalError);
       return;
     }
-    referalAddress = referalData.ReferalAddress;
+
+    referalAddress = referalData?.ReferalAddress || null;
+
+    // Store the direct referalAddress for updating TotalGain later
+    const directReferalAddress: string | null = referalAddress;
+
+    // Loop through the referral chain to update points
     while (referalAddress) {
       const { data, error } = await supabase
         .from('Users')
-        .select('RightPoint, RightID, LeftPoint, LeftID, ProPoint, ProID, ReferalAddress, OwnerAddress')
+        .select(
+          'RightPoint, RightID, LeftPoint, LeftID, ProPoint, ProID, ReferalAddress, OwnerAddress'
+        )
         .eq('OwnerAddress', referalAddress)
         .single();
+
       if (error) {
         console.error('Error fetching data:', error);
         return;
       }
+
+      if (!data) {
+        console.error(`User with OwnerAddress ${referalAddress} not found.`);
+        return;
+      }
+
       const currentRightPoint: number = data.RightPoint;
       const currentLeftPoint: number = data.LeftPoint;
-      const proPoint: number = data.ProPoint;
+      const currentProPoint: number = data.ProPoint;
       const rightID: string = data.RightID;
       const leftID: string = data.LeftID;
       const proID: string = data.ProID;
       const nextReferalAddress: string | null = data.ReferalAddress;
-      const nextOwnerAddress: string | null = data.OwnerAddress;
+      const nextOwnerAddress: string = data.OwnerAddress;
+
       let futureRightPoint = currentRightPoint;
       let futureLeftPoint = currentLeftPoint;
-      let futureProPoint = proPoint;
+      let futureProPoint = currentProPoint;
 
       if (ownerAddress === rightID) {
         futureRightPoint = currentRightPoint + 1;
@@ -782,24 +789,39 @@ function App() {
         futureLeftPoint = currentLeftPoint + 1;
       }
       if (ownerAddress === proID) {
-        futureProPoint = proPoint + 1;
+        futureProPoint = currentProPoint + 1;
       }
 
       const { error: updateError } = await supabase
         .from('Users')
-        .update({ RightPoint: futureRightPoint, LeftPoint: futureLeftPoint, ProPoint: futureProPoint })
+        .update({
+          RightPoint: futureRightPoint,
+          LeftPoint: futureLeftPoint,
+          ProPoint: futureProPoint,
+        })
         .eq('OwnerAddress', referalAddress);
+
       if (updateError) {
         console.error('Error updating points:', updateError);
         return;
       } else {
         console.log(`Points for ${referalAddress} updated successfully`);
       }
+
       referalAddress = nextReferalAddress;
       ownerAddress = nextOwnerAddress;
     }
+
+    // After the loop, update the TotalGain of the direct referral
+    if (directReferalAddress) {
+      await updateReferalTotalGain(directReferalAddress);
+    } else {
+      console.error('Direct referalAddress is null.');
+    }
+
     await fetchData();
   };
+
 
 
 
@@ -834,6 +856,102 @@ function App() {
     noteContainer!.style.display = 'block';
     note!.classList.add('show');
   }
+
+
+
+
+
+
+  
+  interface UserFromDatabase {
+    id: number; // 'int8' translates to 'number' in TypeScript
+    OwnerAddress: string;
+    RightID: string | null; // These are actually OwnerAddress
+    LeftID: string | null; // These are actually OwnerAddress
+  }
+  
+  const generateInvertedHierarchyList = async (logedInUserEmail: string): Promise<string[]> => {
+    const userHierarchy: string[] = [];
+    const addressToIdMap = new Map<string, number>();
+  
+    // Fetch all user data initially
+    const { data: allUserData, error: allUserError } = await supabase
+      .from('Users')
+      .select('id, OwnerAddress, RightID, LeftID');
+  
+    if (allUserError) {
+      console.error('Error fetching all user data:', allUserError);
+      return userHierarchy;
+    }
+  
+    // Populate the address to id map
+    allUserData.forEach((user: UserFromDatabase) => {
+      addressToIdMap.set(user.OwnerAddress, user.id);
+    });
+  
+    let usersToProcess: { email: string, position: string }[] = [{ email: logedInUserEmail, position: 'Me' }];
+  
+    while (usersToProcess.length > 0) {
+      const currentUser = usersToProcess.shift();
+      
+      if (currentUser) {
+        // Find current user data from the map
+        const currentUserId = addressToIdMap.get(currentUser.email);
+        if (!currentUserId) {
+          console.warn(`No id found for user ${currentUser.email}`);
+          continue;
+        }
+  
+        const currentUserData = allUserData.find((user: UserFromDatabase) => user.OwnerAddress === currentUser.email);
+  
+        if (!currentUserData) {
+          console.warn(`No data found for user ${currentUser.email}`);
+          continue;
+        }
+  
+        // Add current user with position and id to the hierarchy list
+        userHierarchy.push(`${currentUser.position}: ${currentUserId}`);
+  
+        // Add RightID and LeftID to the hierarchy list and the users to process
+        if (currentUserData.RightID) {
+          const rightUserId = addressToIdMap.get(currentUserData.RightID);
+          if (rightUserId) {
+            // userHierarchy.push(`rightID of ${currentUserId} is user with id ${rightUserId}`);
+            usersToProcess.push({ email: currentUserData.RightID, position: `Begin Hand of ${currentUserId}` });
+          }
+        }
+  
+        if (currentUserData.LeftID) {
+          const leftUserId = addressToIdMap.get(currentUserData.LeftID);
+          if (leftUserId) {
+            // userHierarchy.push(`leftID of ${currentUserId} is user with id ${leftUserId}`);
+            usersToProcess.push({ email: currentUserData.LeftID, position: `Balance Hand of ${currentUserId}` });
+          }
+        }
+      }
+    }
+  
+    return userHierarchy;
+  };
+  
+  
+  
+
+
+  
+
+  const handleGenerateList = async () => {
+    const hierarchyList = await generateInvertedHierarchyList(logedInUserEmail);
+    setUserHierarchy(hierarchyList);
+  };
+
+
+
+
+
+
+
+
 
 
 
@@ -903,7 +1021,7 @@ function App() {
                               </div>
                               <div className="info-card">
                                 <div className="info-part"><strong>Balance Hand:</strong></div>
-                                <div className="info-part">{row.LeftID}</div>
+                                <div className="info-part">{row.RightID}</div>
                                 <div className="info-part" style={{ textAlign: 'right' }}>{row.RightPoint}</div>
                               </div>
                               {row.ProID && (
@@ -930,6 +1048,19 @@ function App() {
                       </ul>
                       <div>
                         <button className="action-button" onClick={handleShare}>Share Referal</button>
+                        <button className="action-button" onClick={handleGenerateList}>Make List</button>
+                        <div className="app-container">
+                        <div className="list-container">
+                          {userHierarchy.length > 0 && (
+                            <ul className="hierarchy-list">
+                              {userHierarchy.map((user, index) => (
+                                <li key={index} className="hierarchy-item">{user}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        </div>
+
                         {showShareDialog && (
                           <div className="dialog-overlay">
                             <div className="dialog-content">
