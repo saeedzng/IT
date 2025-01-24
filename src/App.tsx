@@ -996,7 +996,7 @@ function App() {
           <div>
             {user ? (
               <div>
-                <h3>Welcome <strong>"{welcomeDisplayName}"</strong>  </h3>
+                <h3>Welcome <strong>"{email}"</strong>  </h3>
                 <div>
                   {haverow ? (
                     <div>
