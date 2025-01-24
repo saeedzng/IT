@@ -1009,7 +1009,7 @@ function App() {
                                 <div className="info">{row.OwnerAddress}</div>
                               </div>
                               <div className="info-card-solo" onClick={() => showNote(row.ReferalAddress)}>
-                                <strong>Your Uppside:</strong> {row.ReferalAddress}
+                                <strong>Your Uppside:</strong> {row.id}
                               </div>
                               <div id="note-container" style={{ display: 'none' }}>
                                 <div id="note" className="note"></div>
