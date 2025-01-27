@@ -7,6 +7,9 @@ import { useTonConnectUI, useTonAddress } from '@tonconnect/ui-react';
 import WebApp from "@twa-dev/sdk";
 import { Address, beginCell } from "ton-core";
 import { useMasterContract } from "./hooks/useMasterContract"
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
+
 // import {extractTransactionDetails} from "./translateResult"
 declare global { interface Window { Telegram: any; } }
 
@@ -849,51 +852,45 @@ function App() {
     }
   };
 
-  function showNote(referralAddress: string) {
-    const note = document.getElementById('note');
-    note!.innerText = referralAddress;
-    const noteContainer = document.getElementById('note-container');
-    noteContainer!.style.display = 'block';
-    note!.classList.add('show');
-  }
 
 
 
 
 
 
-  
+
+
   interface UserFromDatabase {
     id: number; // 'int8' translates to 'number' in TypeScript
     OwnerAddress: string;
     RightID: string | null; // These are actually OwnerAddress
     LeftID: string | null; // These are actually OwnerAddress
   }
-  
+
   const generateInvertedHierarchyList = async (logedInUserEmail: string): Promise<string[]> => {
     const userHierarchy: string[] = [];
     const addressToIdMap = new Map<string, number>();
-  
+
     // Fetch all user data initially
     const { data: allUserData, error: allUserError } = await supabase
       .from('Users')
       .select('id, OwnerAddress, RightID, LeftID');
-  
+
     if (allUserError) {
       console.error('Error fetching all user data:', allUserError);
       return userHierarchy;
     }
-  
+
     // Populate the address to id map
     allUserData.forEach((user: UserFromDatabase) => {
       addressToIdMap.set(user.OwnerAddress, user.id);
     });
-  
-    let usersToProcess: { email: string, position: string }[] = [{ email: logedInUserEmail, position: 'Me' }];
-  
+
+    let usersToProcess: { email: string, position: string }[] = [{ email: logedInUserEmail, position: 'My ID' }];
+
     while (usersToProcess.length > 0) {
       const currentUser = usersToProcess.shift();
-      
+
       if (currentUser) {
         // Find current user data from the map
         const currentUserId = addressToIdMap.get(currentUser.email);
@@ -901,17 +898,17 @@ function App() {
           console.warn(`No id found for user ${currentUser.email}`);
           continue;
         }
-  
+
         const currentUserData = allUserData.find((user: UserFromDatabase) => user.OwnerAddress === currentUser.email);
-  
+
         if (!currentUserData) {
           console.warn(`No data found for user ${currentUser.email}`);
           continue;
         }
-  
+
         // Add current user with position and id to the hierarchy list
-        userHierarchy.push(`${currentUser.position}: ${currentUserId}`);
-  
+        userHierarchy.push(`${currentUser.position} is ( ${currentUserId} )`);
+
         // Add RightID and LeftID to the hierarchy list and the users to process
         if (currentUserData.RightID) {
           const rightUserId = addressToIdMap.get(currentUserData.RightID);
@@ -920,7 +917,7 @@ function App() {
             usersToProcess.push({ email: currentUserData.RightID, position: `Begin Hand of ${currentUserId}` });
           }
         }
-  
+
         if (currentUserData.LeftID) {
           const leftUserId = addressToIdMap.get(currentUserData.LeftID);
           if (leftUserId) {
@@ -930,19 +927,20 @@ function App() {
         }
       }
     }
-  
+
     return userHierarchy;
   };
-  
-  
-  
 
 
-  
+
+
+
+
 
   const handleGenerateList = async () => {
     const hierarchyList = await generateInvertedHierarchyList(logedInUserEmail);
     setUserHierarchy(hierarchyList);
+    setPageN(4);
   };
 
 
@@ -996,7 +994,6 @@ function App() {
           <div>
             {user ? (
               <div>
-                <h3 id = {welcomeDisplayName}>Welcome <strong>"{email}"</strong>  </h3>
                 <div>
                   {haverow ? (
                     <div>
@@ -1005,16 +1002,75 @@ function App() {
                           <li key={row.id}>
                             <div className="info-card-container">
                               <div className="info-card-solo">
-                                <strong>Your Email:</strong>
+                                <strong>Welcome</strong>
                                 <div className="info">{row.OwnerAddress}</div>
+                                <div  >
+                                  {/* <div className="earn-points-container">
+                                <div className="earn-points-item">
+                                  <strong>Earn:</strong>
+                                  <div className="earn-points-value">{(row.TotalGain / 1000000000)}</div>
+                                </div>
+                                <div className="earn-points-item">
+                                  <strong>Points:</strong>
+                                  <div className="earn-points-value">{row.Points}</div>
+                                </div>
+                                <div className="earn-points-item">
+                                  <strong>Points:</strong>
+                                  <div className="earn-points-value">{row.Points}</div>
+                                </div>
+                              </div> */}
+                                </div>
                               </div>
-                              <div className="info-card-solo" onClick={() => showNote(row.ReferalAddress)}>
+                              {/* <div className="info-card-solo" onClick={() => showNote(row.ReferalAddress)}>
                                 <strong>Your Uppside:</strong> {row.id}
                               </div>
                               <div id="note-container" style={{ display: 'none' }}>
                                 <div id="note" className="note"></div>
-                              </div>
-                              <div className="info-card">
+                              </div> */}
+
+                              {row.LeftID ? (
+                                <div className="info-card-new">
+                                  <div className="info-details">
+                                    <div className="info-part-new"><strong>Begin Hand</strong> </div>
+                                    <div className="info-part-new"><strong>Direct:</strong> {row.LeftID}</div>
+                                    <div className="info-part-new"><strong>This Week Buys:</strong> {row.LeftPoint}</div>
+                                  </div>
+                                  <div className="info-icon">
+                                    <FontAwesomeIcon icon={faUsers} className="members-icon-new" size="2x" onClick={ handleGenerateList} />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="info-card">
+                                  <div className="info-part"><strong>Begin Hand:</strong> </div>
+                                  <div className="info-part" style={{ textAlign: 'right' }}>NotActivated</div>
+                                </div>
+                              )}
+
+                              {row.RightID ? (
+                                <div className="info-card-new">
+                                  <div className="info-details">
+                                    <div className="info-part-new"><strong>Balance Hand</strong> </div>
+                                    <div className="info-part-new"><strong>Direct:</strong> {row.RightID}</div>
+                                    <div className="info-part-new"><strong>This Week Buys:</strong> {row.RightPoint}</div>
+                                  </div>
+                                  <div className="info-icon">
+                                    <FontAwesomeIcon icon={faUsers} className="members-icon-new" size="2x" onClick={ handleGenerateList} />
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="info-card">
+                                  <div className="info-part"><strong>Balance Hand:</strong></div>
+                                  <div className="info-part" style={{ textAlign: 'right' }}>NotActivated</div>
+                                </div>
+                              )}
+
+
+
+
+
+
+
+                              {/* <div className="info-card">
                                 <div className="info-part"><strong>Begin Hand:</strong></div>
                                 <div className="info-part">{row.LeftID}</div>
                                 <div className="info-part" style={{ textAlign: 'right' }}>{row.LeftPoint}</div>
@@ -1023,13 +1079,24 @@ function App() {
                                 <div className="info-part"><strong>Balance Hand:</strong></div>
                                 <div className="info-part">{row.RightID}</div>
                                 <div className="info-part" style={{ textAlign: 'right' }}>{row.RightPoint}</div>
-                              </div>
+                              </div> */}
                               {row.ProID && (
-                                <div className="info-card">
-                                  <div className="info-part"><strong>Pro Hand:</strong></div>
-                                  <div className="info-part">{row.ProID}</div>
-                                  <div className="info-part" style={{ textAlign: 'right' }}>{row.ProPoint}</div>
+                                <div className="info-card-new">
+                                  <div className="info-details">
+                                    <div className="info-part-new"><strong>Pro Hand</strong> </div>
+                                    <div className="info-part-new"><strong>Direct:</strong> {row.ProID}</div>
+                                    <div className="info-part-new"><strong>This Week Buys:</strong> {row.ProPoint}</div>
+                                  </div>
+                                  <div className="info-icon">
+                                    <FontAwesomeIcon icon={faUsers} className="members-icon-new" size="2x" onClick={() => handleGenerateList} />
+                                  </div>
                                 </div>
+
+                                // <div className="info-card">
+                                //   <div className="info-part"><strong>Pro Hand:</strong></div>
+                                //   <div className="info-part">{row.ProID}</div>
+                                //   <div className="info-part" style={{ textAlign: 'right' }}>{row.ProPoint}</div>
+                                // </div>
                               )}
                               <div className="earn-points-container">
                                 <div className="earn-points-item">
@@ -1049,17 +1116,17 @@ function App() {
                       <div>
                         <button className="action-button" onClick={handleShare}>Share Referal</button>
                         <button className="action-button" onClick={handleGenerateList}>Make List</button>
-                        <div className="app-container">
-                        <div className="list-container">
-                          {userHierarchy.length > 0 && (
-                            <ul className="hierarchy-list">
-                              {userHierarchy.map((user, index) => (
-                                <li key={index} className="hierarchy-item">{user}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                        </div>
+                        {/* <div className="app-container">
+                          <div className="list-container">
+                            {userHierarchy.length > 0 && (
+                              <ul className="hierarchy-list">
+                                {userHierarchy.map((user, index) => (
+                                  <li key={index} className="hierarchy-item">{user}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        </div> */}
 
                         {showShareDialog && (
                           <div className="dialog-overlay">
@@ -1077,23 +1144,38 @@ function App() {
                       </div>
                     </div>
                   ) : (
-                    <div className="button-container">
-                      <div className="buy-row">
-                        {/* <div className="buy-label">
+
+                    <div  >
+                      <div>
+                        <div className="welcome-name">
+
+                          <strong>Welcome</strong>
+                          <div className="info"><FontAwesomeIcon icon={faUser} style={{ marginRight: '8px' }} />{welcomeDisplayName}</div>
+                        </div>
+                      </div>
+
+
+                      <div className="button-container">
+                        <div className="buy-row">
+                          {/* <div className="buy-label">
                           <label>Buy Chicken</label>
                         </div> */}
-                        <div className="button-row">
-                          <button className="action-button" style={{ marginTop: '40px' }} onClick={handleGetLoan}>Get Loan</button>
-                          <button className="action-button" style={{ marginTop: '40px' }} onClick={handleBuyProduct}>Buy Product</button>
+                          <div className="button-row">
+                            <button className="action-button" style={{ marginTop: '40px' }} onClick={handleGetLoan}>Get Loan</button>
+                            <button className="action-button" style={{ marginTop: '40px' }} onClick={handleBuyProduct}>Buy Product</button>
+                          </div>
                         </div>
                       </div>
                     </div>
+
+
                   )}
                 </div>
 
               </div>
             ) : (
               <div>
+
                 <br />
                 <br />
                 <br />
@@ -1197,6 +1279,20 @@ function App() {
             <button className="action-button" onClick={handleSendPaybackOrder}>3-Payback</button><br />
             <button className="action-button" onClick={PaybackOnProhand}>3-Payback Pro Hand</button><br />
           </div>
+        )}
+
+        {page_n === 4 && (
+                        <div className="app-container">
+                        <div className="list-container">
+                          {userHierarchy.length > 0 && (
+                            <ul className="hierarchy-list">
+                              {userHierarchy.map((user, index) => (
+                                <li key={index} className="hierarchy-item">{user}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      </div>
         )}
       </div>
     </div>

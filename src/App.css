@@ -413,6 +413,52 @@ ul {
   flex: 1;
   text-align: left;
 }
+.info-card-new {
+  font-family: 'Great Vibes', cursive;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 10px 0;
+  padding: 5px;
+  color: var(--text-color-dark);
+  background-color: var(--bg-color-dark);
+  border: 1px solid #838383;
+  border-radius: 5px;
+  width: 95%;
+  opacity: 0.9;
+}
+
+
+.info-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-part-new {
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.balance-center {
+  text-align: center;
+}
+
+.members-link-new {
+  cursor: pointer;
+  text-decoration: underline;
+  color: blue;
+}
+
+.members-icon-new {
+  cursor: pointer;
+  border: 1px solid #838383;
+  border-radius: 5px;
+  margin-left: 5px;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+}
+
 
 .note {
   position: absolute;
@@ -433,15 +479,17 @@ ul {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f0f0f0;
+  
   padding: 10px;
-  border-radius: 8px;
+  
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   margin-top: 20px;
   width: 93%;
 }
 
 .earn-points-item {
+  background-color: #f0f0f0;
+  border-radius: 8px;
   text-align: center;
   flex: 1;
   margin: 0 10px;
@@ -479,9 +527,10 @@ ul {
 }
 
 .hierarchy-item {
-  background-color: #2c0202;
+  background-color: var(--bg-body);
   margin: 5px 0;
   padding: 5px 8px;
+  border: 1px solid #eee;
   border-radius: 5px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s ease;
@@ -491,6 +540,12 @@ ul {
   background-color: #4e3a3a;
   cursor: pointer;
 }
+
+.welcome-name {
+  padding: 15px;
+  margin: 0;
+}
+
 
 
 
