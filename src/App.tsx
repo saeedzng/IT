@@ -1036,7 +1036,7 @@ function App() {
                                     <div className="info-part-new"><strong>This Week Buys:</strong> {row.LeftPoint}</div>
                                   </div>
                                   <div className="info-icon">
-                                    <FontAwesomeIcon icon={faUsers} className="members-icon-new" size="2x" onClick={ handleGenerateList} />
+                                    <FontAwesomeIcon icon={faUsers} className="members-icon-new" size="2x" onClick={handleGenerateList} />
                                   </div>
                                 </div>
                               ) : (
@@ -1054,7 +1054,7 @@ function App() {
                                     <div className="info-part-new"><strong>This Week Buys:</strong> {row.RightPoint}</div>
                                   </div>
                                   <div className="info-icon">
-                                    <FontAwesomeIcon icon={faUsers} className="members-icon-new" size="2x" onClick={ handleGenerateList} />
+                                    <FontAwesomeIcon icon={faUsers} className="members-icon-new" size="2x" onClick={handleGenerateList} />
                                   </div>
                                 </div>
                               ) : (
@@ -1282,17 +1282,17 @@ function App() {
         )}
 
         {page_n === 4 && (
-                        <div className="app-container">
-                        <div className="list-container">
-                          {userHierarchy.length > 0 && (
-                            <ul className="hierarchy-list">
-                              {userHierarchy.map((user, index) => (
-                                <li key={index} className="hierarchy-item">{user}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      </div>
+          <div className="app-container">
+            <div className="list-container">
+              {userHierarchy.length > 0 && (
+                <ul className="hierarchy-list">
+                  {userHierarchy.map((user, index) => (
+                    <li key={index} className="hierarchy-item">{user}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         )}
       </div>
     </div>
