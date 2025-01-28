@@ -1070,16 +1070,7 @@ function App() {
 
 
 
-                              {/* <div className="info-card">
-                                <div className="info-part"><strong>Begin Hand:</strong></div>
-                                <div className="info-part">{row.LeftID}</div>
-                                <div className="info-part" style={{ textAlign: 'right' }}>{row.LeftPoint}</div>
-                              </div>
-                              <div className="info-card">
-                                <div className="info-part"><strong>Balance Hand:</strong></div>
-                                <div className="info-part">{row.RightID}</div>
-                                <div className="info-part" style={{ textAlign: 'right' }}>{row.RightPoint}</div>
-                              </div> */}
+
                               {row.ProID && (
                                 <div className="info-card-new">
                                   <div className="info-details">
@@ -1098,7 +1089,19 @@ function App() {
                                 //   <div className="info-part" style={{ textAlign: 'right' }}>{row.ProPoint}</div>
                                 // </div>
                               )}
-                              <div className="earn-points-container">
+                              <div className="info-card">
+                                <div className="info-part"><strong>Weekly Points:</strong></div>
+                                <div className="info-part" style={{ textAlign: 'right' }}>{Math.min(row.LeftPoint, row.RightPoint)}</div>
+                              </div>
+                              <div className="info-card">
+                                <div className="info-part"><strong>Last Week Rewards:</strong></div>
+                                <div className="info-part" style={{ textAlign: 'right' }}>{row.LastGain/1000000000}</div>
+                              </div>
+                              <div className="info-card">
+                                <div className="info-part"><strong>Total Rewards:</strong></div>
+                                <div className="info-part" style={{ textAlign: 'right' }}>{row.TotalGain/1000000000}</div>
+                              </div>
+                              {/* <div className="earn-points-container">
                                 <div className="earn-points-item">
                                   <strong>Earn:</strong>
                                   <div className="earn-points-value">{(row.TotalGain / 1000000000)}</div>
@@ -1107,7 +1110,7 @@ function App() {
                                   <strong>Points:</strong>
                                   <div className="earn-points-value">{row.Points}</div>
                                 </div>
-                              </div>
+                              </div> */}
                             </div>
 
                           </li>
