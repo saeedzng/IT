@@ -1019,7 +1019,7 @@ function App() {
                                   <div className="info-part-new">{row.OwnerAddress}</div>
                                 </div>
                                 <div className="info-icon">
-                                  <FontAwesomeIcon icon={faSignOut} className="members-icon-new" size="2x" onClick={handleSignOut} />
+                                  <FontAwesomeIcon icon ={faSignOut} className="members-icon-new" size="2x" onClick={handleSignOut} />
                                 </div>
                               </div>
 
