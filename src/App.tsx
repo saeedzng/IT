@@ -8,7 +8,7 @@ import WebApp from "@twa-dev/sdk";
 import { Address, beginCell } from "ton-core";
 import { useMasterContract } from "./hooks/useMasterContract"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faUsers } from '@fortawesome/free-solid-svg-icons';
 
 // import {extractTransactionDetails} from "./translateResult"
 declare global { interface Window { Telegram: any; } }
@@ -1150,7 +1150,7 @@ function App() {
                         <div className="welcome-name">
 
                           <strong>Welcome</strong>
-                          <div className="info"><FontAwesomeIcon icon={faUser} style={{ marginRight: '8px' }} />{welcomeDisplayName}</div>
+                          <div className="info">{welcomeDisplayName}</div>
                         </div>
                       </div>
 
