@@ -8,7 +8,7 @@ import WebApp from "@twa-dev/sdk";
 import { Address, beginCell } from "ton-core";
 import { useMasterContract } from "./hooks/useMasterContract"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers } from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faSignOut } from '@fortawesome/free-solid-svg-icons';
 
 // import {extractTransactionDetails} from "./translateResult"
 declare global { interface Window { Telegram: any; } }
@@ -958,22 +958,7 @@ function App() {
       <div className="top-section">
         <div className="header">
           <div className="left">
-            {user ? (
-              <img
-                src="./logo.png"
-                alt="Logo"
-                className="logo logout-logo"
-                onClick={handleSignOut}
-              />
-            ) : (
-              <img
-                src="./logo.png"
-                alt="Logo"
-                className="logo"
-                onClick={() => setPageN(0)}
-              />
-            )}
-
+              <img src="./logo.png"alt="Logo"className="logo"/>
           </div>
           <div className="right">
             <TonConnectButton />
@@ -985,7 +970,7 @@ function App() {
         <nav className="menu">
           <ul>
             <li key={0}><button onClick={() => setPageN(0)}>Home</button></li>
-            <li key={2}><button onClick={() => setPageN(3)}>Admin</button></li>
+            {/* <li key={2}><button onClick={() => setPageN(3)}>Admin</button></li> */}
           </ul>
         </nav>
       </div>
@@ -1001,11 +986,11 @@ function App() {
                         {tableData.map((row) => (
                           <li key={row.id}>
                             <div className="info-card-container">
-                              <div className="info-card-solo">
+                              {/* <div className="info-card-solo">
                                 <strong>Welcome</strong>
                                 <div className="info">{row.OwnerAddress}</div>
                                 <div  >
-                                  {/* <div className="earn-points-container">
+                                  <div className="earn-points-container">
                                 <div className="earn-points-item">
                                   <strong>Earn:</strong>
                                   <div className="earn-points-value">{(row.TotalGain / 1000000000)}</div>
@@ -1018,15 +1003,25 @@ function App() {
                                   <strong>Points:</strong>
                                   <div className="earn-points-value">{row.Points}</div>
                                 </div>
-                              </div> */}
-                                </div>
                               </div>
+                                </div>
+                              </div> */}
                               {/* <div className="info-card-solo" onClick={() => showNote(row.ReferalAddress)}>
                                 <strong>Your Uppside:</strong> {row.id}
                               </div>
                               <div id="note-container" style={{ display: 'none' }}>
                                 <div id="note" className="note"></div>
                               </div> */}
+
+                              <div className="info-card-new">
+                                <div className="info-details">
+                                  <div className="info-part-new"><strong>Welcome</strong> </div>
+                                  <div className="info-part-new">{row.OwnerAddress}</div>
+                                </div>
+                                <div className="info-icon">
+                                  <FontAwesomeIcon icon={faSignOut} className="members-icon-new" size="2x" onClick={handleSignOut} />
+                                </div>
+                              </div>
 
                               {row.LeftID ? (
                                 <div className="info-card-new">
@@ -1095,11 +1090,11 @@ function App() {
                               </div>
                               <div className="info-card">
                                 <div className="info-part"><strong>Last Week Rewards:</strong></div>
-                                <div className="info-part" style={{ textAlign: 'right' }}>{row.LastGain/1000000000}</div>
+                                <div className="info-part" style={{ textAlign: 'right' }}>{row.LastGain / 1000000000} TON</div>
                               </div>
                               <div className="info-card">
                                 <div className="info-part"><strong>Total Rewards:</strong></div>
-                                <div className="info-part" style={{ textAlign: 'right' }}>{row.TotalGain/1000000000}</div>
+                                <div className="info-part" style={{ textAlign: 'right' }}>{row.TotalGain / 1000000000} TON</div>
                               </div>
                               {/* <div className="earn-points-container">
                                 <div className="earn-points-item">
@@ -1118,7 +1113,6 @@ function App() {
                       </ul>
                       <div>
                         <button className="action-button" onClick={handleShare}>Share Referal</button>
-                        <button className="action-button" onClick={handleGenerateList}>Make List</button>
                         {/* <div className="app-container">
                           <div className="list-container">
                             {userHierarchy.length > 0 && (
