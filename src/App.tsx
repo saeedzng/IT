@@ -1018,8 +1018,8 @@ function App() {
                                   <div className="info-part-new"><strong>Welcome</strong> </div>
                                   <div className="info-part-new">{row.OwnerAddress}</div>
                                 </div>
-                                <div className="info-icon">
-                                  <FontAwesomeIcon icon ={faSignOut} className="members-icon-new" size="2x" onClick={handleSignOut} />
+                                <div className="info-icon" onClick={handleSignOut}>
+                                  <FontAwesomeIcon icon ={faSignOut} className="members-icon-new" size="2x" />
                                 </div>
                               </div>
 
