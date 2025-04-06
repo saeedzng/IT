@@ -413,7 +413,6 @@ function App() {
   };
 
 
-
   const handleCerateransaction = async (price: string) => {
     try {
       const senderJettonWalletAddress = await getSenderJettonWalletAddress(logedInUserTonAddress);

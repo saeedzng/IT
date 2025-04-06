@@ -16,7 +16,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@orbs-network/ton-access": "^2.3.3",
     "@supabase/supabase-js": "^2.46.2",
-    "@ton/core": "^0.59.0",
+    "@ton/core": "^0.60.0",
     "@ton/crypto": "^3.3.0",
     "@ton/ton": "^15.2.1",
     "@tonconnect/ui-react": "^2.0.9",
