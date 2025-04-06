@@ -1028,9 +1028,8 @@ function App() {
           <ul>
             <li key={0}><button onClick={() => setPageN(5)}>Products</button></li>
             <li key={1}><button onClick={() => setPageN(0)}>Home</button></li>
-            {/* <li key={5}><button onClick={() => setPageN(3)}>admin</button></li> */}
             <li key={2}><button onClick={() => setPageN(6)}>Hybrid Plan</button></li>
-            {/* <li key={2}><button onClick={() => setPageN(3)}>Admin</button></li> */}
+            <li key={3}><button onClick={() => setPageN(3)}>Admin</button></li>
           </ul>
         </nav>
       </div>
