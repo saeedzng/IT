@@ -50,8 +50,9 @@ function App() {
       ConvertReferalIDToReferalEmail(Number(ReferalIDFromUrl)); // Pass the value directly to the function
     }
     if (!ReferalIDFromUrl) {
-      setReferal_ID_FromURL(Number(1)); // Ensure it's a number
-      ConvertReferalIDToReferalEmail(Number(1)); // Pass the value directly to the function
+      WebApp.showAlert(`You Must Open App with Rerefal ID Atachetd To The Link Other`);
+      // setReferal_ID_FromURL(Number(1)); // Ensure it's a number
+      // ConvertReferalIDToReferalEmail(Number(1)); // Pass the value directly to the function
     }
   }, []);
 
@@ -100,8 +101,8 @@ function App() {
       const telegramShareUrl = `https://t.me/zdefailandbot/zdefailand?startapp=${data.id}`;
       if (navigator.share) {
         navigator.share({
-          title: 'Share ',
-          text: 'Share',
+          title: 'ZdefaiLand ',
+          text: 'If you purchase using this link, you will be added to my reseller network.',
           url: telegramShareUrl,
         });
       } else {
@@ -451,13 +452,13 @@ function App() {
   };
 
 
+
   useEffect(() => {
     if (transactionResult !== null) {
       console.log("Transaction Confirmed");
       handleBuyPointForUppers();
     }
   }, [transactionResult]);
-
 
 
 
@@ -1173,11 +1174,11 @@ function App() {
                         </div>
                       </div>
                     </div>
-                    
-                  )}
-                            {/* <button className="action-button" style={{ marginTop: '40px' }} onClick={ () => handleCerateransaction("10000000")}>Get Loan</button> */}
 
+
+                  )}
                 </div>
+
               </div>
             ) : (
               <div>
@@ -1297,38 +1298,6 @@ function App() {
               )}
             </div>
           </div>
-        )}
-
-        {page_n === 5 && (
-          <div className="app-container">
-            <div className="list-container">
-              <h3>Our Products</h3>
-              <p className="justified-text">
-                Our fully automated robot called Phoenix is sold in the world of web2 like the mql5 site for $2000, but you get 90% discount and loan from our smart contract on the ton network of our web3 services with a payment of only 10% and our offer for use and continuous profit is $10,000, we will activate the product for you as soon as you charge the account and intend to launch it, this means subscription in your favor, you can save half of that amount and win up to $50 from our lottery and compensate for your money deficit by introducing a few customers. Our offer to marketers is to earn money Keep money Multiply money
-              </p>
-            </div>
-          </div>
-
-        )}
-
-        {page_n === 6 && (
-          <div className="app-container">
-            <div className="list-container">
-              <h3>Our Hybrid Plan</h3>
-              <p className="justified-text">
-                Our Hybrid Plan Features:
-                1- 10% Direct Selling Bonus.
-                2- For each balance, you receive one point and 60% of the sales in the smart contract pool are divided equally between the points once a week.
-                The income limit for each desk is $500 per day, $3500 per week and $15,000 per month.
-                Note: There is no limit for accounts and wallets.
-                3- After earning $100,000, you are allowed to start a third line,
-                which will add $30,000 per month to the previous income limit (details will be announced in the eligible account).
-                4- After $250,000, you are allowed to start a fourth line,
-                which will add $40,000 to the previous income limit (details will be announced in the eligible account).
-                5- After earning $500,000, you are allowed to start a fifth line, which will add $50,000 per month to your previous income limit. Note: The first 100 people to reach this point will become EA ambassadors and will have shares in the company's DEX.    </p>
-            </div>
-          </div>
-
         )}
       </div>
     </div>
