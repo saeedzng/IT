@@ -9,11 +9,9 @@ import { Address, beginCell } from "ton-core";
 import { useMasterContract } from "./hooks/useMasterContract"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers, faSignOut } from '@fortawesome/free-solid-svg-icons';
+import { getSenderJettonWalletAddress } from './getwalletaddress';
 
-// import {extractTransactionDetails} from "./translateResult"
 declare global { interface Window { Telegram: any; } }
-
-
 
 function App() {
   const [page_n, setPageN] = useState(Number(0));
@@ -32,13 +30,14 @@ function App() {
   const [haverow, setHaverow] = useState(false);
   const [referal_ID_FromURL, setReferal_ID_FromURL] = useState(0);
   const [referal_Email_FromURL, setreferal_Email_FromURL] = useState("");
-  const [referal_Ton_Address_FromURL, setReferal_Ton_Address_FromURL] = useState("");
+  // const [/* referal_Ton_Address_FromURL, */, setReferal_Ton_Address_FromURL] = useState("");
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const logedInUserTonAddress = useTonAddress();
   const [shareRate, setShareRate] = useState(0);
   const [buy10Percent, setBuy10Percent] = useState(0);
   const [userHierarchy, setUserHierarchy] = useState<string[]>([]);
+  const [HonyLogo, setHonyLogo] = useState("start");
 
 
 
@@ -58,63 +57,64 @@ function App() {
 
   const ConvertReferalIDToReferalEmail = async (id: number) => {
     const { data: referal_Email_Address, error: referal_Email_Error } = await supabase
-      .from('Users')
+      .from('Usertbl')
       .select('OwnerAddress, TonAddress')
       .eq('id', id)
       .single();
 
     if (referal_Email_Error) {
       console.error('Error Reading referal_Email:', referal_Email_Error);
-      WebApp.showAlert(`Error Reading referal_Email: ${referal_Email_Error.message}`);
+      WebApp.showAlert(`Please make sure you are using a valid link to open the application. Your Link Must Have an ID`);
       return;
     }
 
     setreferal_Email_FromURL(referal_Email_Address.OwnerAddress);
-    setReferal_Ton_Address_FromURL(referal_Email_Address.TonAddress);
+    // setReferal_Ton_Address_FromURL(referal_Email_Address.TonAddress);
   };
 
 
 
   const master_data = useMasterContract();
+
   useEffect(() => {
     if (master_data && master_data.share_rate !== undefined) {
       setShareRate(master_data.share_rate);
     }
   }, [master_data]);
-
-
+  
   const handleShare = async () => {
     if (!user) {
-      WebApp.showAlert("You Must Sign In");
+      WebApp.showAlert("You must be logged in to your account.");
       return;
     }
     if (!haverow) {
-      WebApp.showAlert("You Must Buy a Product First.");
+      WebApp.showAlert("You must first purchase a product.");
       return;
     }
     const { data, error } = await supabase
-      .from('Users')
+      .from('Usertbl')
       .select('id')
       .eq('OwnerAddress', user.email)
       .single();
     if (data) {
-      const telegramShareUrl = `https://t.me/M_tg25bot/TestApp?startapp=${data.id}`;
+      const telegramShareUrl = `https://t.me/zdefailandbot/zdefailand?startapp=${data.id}`;
       if (navigator.share) {
         navigator.share({
           title: 'Share ',
           text: 'Share',
           url: telegramShareUrl,
-        })
+        });
       } else {
         showFallback(telegramShareUrl);
       }
-    };
-    if (error) {
-      WebApp.showAlert(`Error : ${error.message}`);
-    } else {
-      console.log(`share successfully`);
     }
-  }
+    if (error) {
+      WebApp.showAlert(`Error: ${error.message}`);
+    } else {
+      console.log('share successfully');
+    }
+  };
+  
 
 
   const showFallback = (url: string) => {
@@ -140,7 +140,7 @@ function App() {
     try {
       // Fetch all users and calculate the total sum of Points
       const { data: totalPointsResult, error: totalPointsError } = await supabase
-        .from('Users')
+        .from('Usertbl')
         .select('Points');
       if (totalPointsError) {
         throw new Error(`Error fetching total points: ${totalPointsError.message}`);
@@ -148,14 +148,14 @@ function App() {
       // Calculate the total sum of Points
       const totalPoints = totalPointsResult.reduce((acc, user) => acc + user.Points, 0);
       let share_data_cell = beginCell()
-        .storeUint(2, 32)
+        .storeUint(11, 32)
         .storeUint(totalPoints, 32)
         .endCell();
       const result = await tonConnectUI.sendTransaction({
         validUntil: Date.now() + 5 * 60 * 1000,
         messages: [
           {
-            address: "kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG",
+            address: "kQD_VDXfdjRq2Nm-NOW3HwM4BFK6XBh6-8NUg4roLamJVf1s",
             amount: "10000000",
             payload: share_data_cell.toBoc().toString("base64"),
           }
@@ -175,7 +175,7 @@ function App() {
     try {
       // Fetch the first three users with Points greater than zero
       const { data: users, error: fetchError } = await supabase
-        .from('Users')
+        .from('Usertbl')
         .select('OwnerAddress, TonAddress, Points, TotalGain')
         .gt('Points', 0)
         .limit(3);
@@ -203,7 +203,7 @@ function App() {
 
       // Create the datacell for the current batch
       let datacellBuilder = beginCell()
-        .storeUint(3, 32) // Indicates the type of transaction
+        .storeUint(2, 32) // Indicates the type of transaction
         .storeUint(userArray.length, 32); // Number of users in the current batch
 
       // Add each user's address and points to the datacell
@@ -221,7 +221,7 @@ function App() {
           validUntil: Date.now() + 5 * 60 * 1000, // Transaction valid for 5 minutes
           messages: [
             {
-              address: "kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG",
+              address: "kQD_VDXfdjRq2Nm-NOW3HwM4BFK6XBh6-8NUg4roLamJVf1s",
               amount: "10000000",
               payload: datacell.toBoc().toString("base64"),
             }
@@ -235,7 +235,7 @@ function App() {
           for (const user of userArray) {
             const updatedTotalGain = user.TotalGain + user.GainAmount;
             const { error: updateError } = await supabase
-              .from('Users')
+              .from('Usertbl')
               .update({
                 Points: 0, // Reset Points to zero after transaction
                 TotalGain: updatedTotalGain,
@@ -276,7 +276,7 @@ function App() {
     try {
       // Fetch users with ProID not null or empty and ProPoint greater than 1000, limited to 3 users
       const { data: users, error: fetchError } = await supabase
-        .from('Users')
+        .from('Usertbl')
         .select('OwnerAddress, ProID, ProPoint, TonAddress, ProGain')
         .not('ProID', 'is', null)
         .not('ProID', 'eq', '')
@@ -304,7 +304,7 @@ function App() {
 
       // Create the datacell for the current batch
       let datacellBuilder = beginCell()
-        .storeUint(5, 32) // Indicates the type of transaction
+        .storeUint(3, 32) // Indicates the type of transaction
         .storeUint(userArray.length, 32); // Number of users in the current batch
 
       // Add each user's address and calculated payment to the datacell
@@ -335,7 +335,7 @@ function App() {
           // Update ProGain and ProPoint for the current batch of users
           for (const user of userArray) {
             const { error: updateError } = await supabase
-              .from('Users')
+              .from('Usertbl')
               .update({ ProGain: user.ProGain, ProPoint: user.ProPoint })
               .eq('OwnerAddress', user.OwnerAddress);
 
@@ -361,12 +361,12 @@ function App() {
 
   const handleBuyProduct = async () => {
     if (!user) {
-      WebApp.showAlert('You Must Log in');
+      WebApp.showAlert('You must be logged in to your account.');
       console.error('You Must Log in');
       return;
     }
     if (!logedInUserTonAddress) {
-      WebApp.showAlert('You Must Connect Your Wallet');
+      WebApp.showAlert('You must first connect your wallet to the app.');
       console.error('You Must Connect Your Wallet');
       return;
     }
@@ -377,7 +377,7 @@ function App() {
     }
     const result = await handleCheckReferalisNull();
     if (!result) {
-      WebApp.showAlert('Your Upper Has Right Hand And Left Hand And Not Allowed To Strart Pro Hand.');
+      WebApp.showAlert('Your introducer is not allowed to start a new hand.');
       console.error('Your Upper Has Right Hand And Left Hand.');
       return;
     }
@@ -388,12 +388,12 @@ function App() {
 
   const handleGetLoan = async () => {
     if (!user) {
-      WebApp.showAlert('You Must Log in');
+      WebApp.showAlert('You must be logged in to your account.');
       console.error('You Must Log in');
       return;
     }
     if (!logedInUserTonAddress) {
-      WebApp.showAlert('You Must Connect Your Wallet');
+      WebApp.showAlert('You must first connect your wallet to the app.');
       console.error('You Must Connect Your Wallet');
       return;
     }
@@ -404,7 +404,7 @@ function App() {
     }
     const result = await handleCheckReferalisNull();
     if (!result) {
-      WebApp.showAlert('Your Upper Has Right Hand And Left Hand And Not Allowed To Strart Pro Hand.');
+      WebApp.showAlert('Your introducer is not allowed to start a new hand.');
       console.error('Your Upper Has Right Hand And Left Hand.');
       return;
     }
@@ -415,18 +415,28 @@ function App() {
 
   const handleCerateransaction = async (price: string) => {
     try {
-
+      const senderJettonWalletAddress = await getSenderJettonWalletAddress(logedInUserTonAddress);
+      // console.log(senderJettonWalletAddress)
       let datacellBuilder = beginCell()
-        .storeUint(4, 32)
-        .storeAddress(Address.parse(referal_Ton_Address_FromURL));
-      const datacell = datacellBuilder.endCell();
+      .storeUint(0x0f8a7ea5, 32) // Method ID for "transfer" as per Jetton standard
+      .storeUint(0, 64) // Query ID (0 for no specific query)
+      .storeCoins(10000) // USDT amount (in smallest units)
+      .storeAddress(Address.parse("EQDBAib1_NB3WycBrxyez3hgseTvYiFnsLUMy5jmZjarGi7_")) // Recipient's address
+      .storeAddress(Address.parse(senderJettonWalletAddress)) // Sender's address (return address for excess funds or errors)
+      .storeBit(0) // Optional payload or comment field (set to 0 if unused)
+      .storeCoins(0) 
+      .storeBit(0)
+      .storeUint(0, 32)
+      .storeStringTail("Buy");
+    const datacell = datacellBuilder.endCell();
+    
 
       const result = await tonConnectUI.sendTransaction({
         validUntil: Date.now() + 5 * 60 * 1000,
         messages: [
           {
-            address: "kQB-sFIUZ1AzFz855TelqvrSOOndkKeIFA7sPD_7VEvvQDjG",
-            amount: price,
+            address: "EQDBAib1_NB3WycBrxyez3hgseTvYiFnsLUMy5jmZjarGi7_",
+            amount: "10000000",
             payload: datacell.toBoc().toString("base64"),
           }
         ]
@@ -454,7 +464,7 @@ function App() {
   const updateReferalTotalGain = async (ownerAddress: string) => {
     try {
       const { data: referalUserData, error: referalUserError } = await supabase
-        .from('Users')
+        .from('Usertbl')
         .select('TotalGain')
         .eq('OwnerAddress', ownerAddress)
         .single();
@@ -468,7 +478,7 @@ function App() {
         const newTotalGain = referalUserData.TotalGain + buy10Percent;
 
         const { error: updateError } = await supabase
-          .from('Users')
+          .from('Usertbl')
           .update({ TotalGain: newTotalGain })
           .eq('OwnerAddress', ownerAddress);
 
@@ -604,7 +614,7 @@ function App() {
     try {
       // Fetch all users
       const { data: users, error: fetchError } = await supabase
-        .from('Users')
+        .from('Usertbl')
         .select('id, RightPoint, LeftPoint');
       if (fetchError) {
         throw new Error(`Error fetching users: ${fetchError.message}`);
@@ -615,7 +625,7 @@ function App() {
         const minPoint = Math.min(RightPoint, LeftPoint);
         // Update the user's points
         const { error: updateError } = await supabase
-          .from('Users')
+          .from('Usertbl')
           .update({
             Points: minPoint,
             RightPoint: 0,
@@ -638,13 +648,13 @@ function App() {
   const handleCheckReferalisNull = async () => {
     // Fetch ReferalAddress, OwnerAddress, RightID, LeftID, TotalGain, and ProID in a single query
     const { data: userData, error: fetchError } = await supabase
-      .from('Users')
+      .from('Usertbl')
       .select('OwnerAddress, RightID, LeftID, TotalGain, ProID')
       .eq('id', referal_ID_FromURL)
       .single();
     if (fetchError) {
       console.error('Error fetching data:', fetchError);
-      WebApp.showAlert('Error Reading referal_Email, RightID, LeftID, TotalGain, and ProID');
+      WebApp.showAlert('Ensure that you are using a correct link to access the application.');
       return;
     }
     const { OwnerAddress, RightID, LeftID, TotalGain, ProID } = userData;
@@ -673,7 +683,7 @@ function App() {
       const { OwnerAddress, RightID, LeftID, TotalGain, ProID } = result;
       // Insert new row for new user
       const { error: insertError } = await supabase
-        .from('Users')
+        .from('Usertbl')
         .insert([{ OwnerAddress: user!.email, ReferalAddress: OwnerAddress, TonAddress: logedInUserTonAddress }]);
       if (insertError) {
         console.error('Error creating row:', insertError);
@@ -686,7 +696,7 @@ function App() {
       if (!RightID || RightID === '') {
         // If RightID is null or empty, update it with the logged-in user's email
         const { error: updateError } = await supabase
-          .from('Users')
+          .from('Usertbl')
           .update({ RightID: user!.email })
           .eq('id', referal_ID_FromURL);
         if (updateError) {
@@ -697,7 +707,7 @@ function App() {
       } else if (!LeftID || LeftID === '') {
         // If RightID is not null or empty but LeftID is null or empty, update LeftID with the logged-in user's email
         const { error: updateError } = await supabase
-          .from('Users')
+          .from('Usertbl')
           .update({ LeftID: user!.email })
           .eq('id', referal_ID_FromURL);
         if (updateError) {
@@ -708,7 +718,7 @@ function App() {
       } else if (TotalGain >= 20000000000000 && (!ProID || ProID === '')) {
         // If both RightID and LeftID have values, TotalGain is greater than or equal to 20000, and ProID is null or empty, update ProID with the logged-in user's email
         const { error: updateError } = await supabase
-          .from('Users')
+          .from('Usertbl')
           .update({ ProID: user!.email })
           .eq('id', referal_ID_FromURL);
         if (updateError) {
@@ -719,7 +729,7 @@ function App() {
       } else {
         // If neither RightID nor LeftID is null or empty, and TotalGain is less than 20000, log their values
         console.log('NOTHING UPDATED , Your Upper Is Not Allowed Te Start New Hand ', { RightID, LeftID });
-        WebApp.showAlert('NOTHING UPDATED , Your Upper Is Not Allowed Te Start New Hand ' + JSON.stringify({ RightID, LeftID }));
+        WebApp.showAlert('NOTHING UPDATED , Your Upper Is Not Allowed Te Start New Hand ');
       }
     } catch (error) {
       console.error('Unexpected error:', error);
@@ -727,7 +737,19 @@ function App() {
   };
 
 
-
+  const updateFullPayStatus = async (email : string) => {
+    const { error } = await supabase
+      .from('Usertbl')
+      .update({ FullPay: true })
+      .eq('OwnerAddress', email);
+  
+    if (error) {
+      console.error('Error updating FullPay status:', error);
+    } else {
+      console.log(`FullPay status updated successfully for ${email}`);
+    }
+  };
+  
 
 
   const handleBuyPointForUppers = async () => {
@@ -737,7 +759,7 @@ function App() {
 
     // Fetch the initial referalAddress
     const { data: referalData, error: referalError } = await supabase
-      .from('Users')
+      .from('Usertbl')
       .select('ReferalAddress')
       .eq('OwnerAddress', ownerAddress)
       .single();
@@ -755,7 +777,7 @@ function App() {
     // Loop through the referral chain to update points
     while (referalAddress) {
       const { data, error } = await supabase
-        .from('Users')
+        .from('Usertbl')
         .select(
           'RightPoint, RightID, LeftPoint, LeftID, ProPoint, ProID, ReferalAddress, OwnerAddress'
         )
@@ -796,7 +818,7 @@ function App() {
       }
 
       const { error: updateError } = await supabase
-        .from('Users')
+        .from('Usertbl')
         .update({
           RightPoint: futureRightPoint,
           LeftPoint: futureLeftPoint,
@@ -822,6 +844,11 @@ function App() {
       console.error('Direct referalAddress is null.');
     }
 
+    // Update FullPay status if buy10Percent is 2000000
+  if (buy10Percent === 2000000) {
+    await updateFullPayStatus(logedInUserEmail);
+  }
+
     await fetchData();
   };
 
@@ -835,7 +862,7 @@ function App() {
 
   const fetchData = async () => {
     const { data, error } = await supabase
-      .from('Users')
+      .from('Usertbl')
       .select()
       .eq('OwnerAddress', logedInUserEmail)
       .single(); // Fetch a single row where OwnerAddress matches logedInUserEmail
@@ -844,13 +871,43 @@ function App() {
       console.error('Error fetching data:', error);
       setHaverow(false);
     } else {
-      console.log('Fetched data:', data);
+      // console.log('Fetched data:', data);
       setTableData([data]); // Set the single row data into an array to be compatible with setTableData
       setHaverow(!!data);
       console.log("logedInUserEmail is " + logedInUserEmail);
       console.log("have row is " + !!data);
     }
   };
+
+
+
+
+
+  interface HoneyUserData {
+    OwnerAddress: string;
+    LeftID?: string;
+    RightID?: string;
+    TotalGain: number;
+    // Add other relevant fields as needed
+  }
+
+
+
+  // Function to check if LeftID and RightID are present
+  const checkAndSetHonyLogo = (data: HoneyUserData) => {
+    if (data.LeftID && data.RightID) {
+      setHonyLogo("stage");
+    }
+  };
+
+  // Effect to call checkAndSetHonyLogo when tableData changes
+  useEffect(() => {
+    if (tableData.length > 0) {
+      checkAndSetHonyLogo(tableData[0]);
+    }
+  }, [tableData]);
+
+
 
 
 
@@ -873,7 +930,7 @@ function App() {
 
     // Fetch all user data initially
     const { data: allUserData, error: allUserError } = await supabase
-      .from('Users')
+      .from('Usertbl')
       .select('id, OwnerAddress, RightID, LeftID');
 
     if (allUserError) {
@@ -958,7 +1015,7 @@ function App() {
       <div className="top-section">
         <div className="header">
           <div className="left">
-              <img src="./logo.png"alt="Logo"className="logo"/>
+            <img src="./logo.png" alt="Logo" className="logo" />
           </div>
           <div className="right">
             <TonConnectButton />
@@ -969,7 +1026,10 @@ function App() {
         </div>
         <nav className="menu">
           <ul>
-            <li key={0}><button onClick={() => setPageN(0)}>Home</button></li>
+            <li key={0}><button onClick={() => setPageN(5)}>Products</button></li>
+            <li key={1}><button onClick={() => setPageN(0)}>Home</button></li>
+            {/* <li key={5}><button onClick={() => setPageN(3)}>admin</button></li> */}
+            <li key={2}><button onClick={() => setPageN(6)}>Hybrid Plan</button></li>
             {/* <li key={2}><button onClick={() => setPageN(3)}>Admin</button></li> */}
           </ul>
         </nav>
@@ -986,40 +1046,15 @@ function App() {
                         {tableData.map((row) => (
                           <li key={row.id}>
                             <div className="info-card-container">
-                              {/* <div className="info-card-solo">
-                                <strong>Welcome</strong>
-                                <div className="info">{row.OwnerAddress}</div>
-                                <div  >
-                                  <div className="earn-points-container">
-                                <div className="earn-points-item">
-                                  <strong>Earn:</strong>
-                                  <div className="earn-points-value">{(row.TotalGain / 1000000000)}</div>
-                                </div>
-                                <div className="earn-points-item">
-                                  <strong>Points:</strong>
-                                  <div className="earn-points-value">{row.Points}</div>
-                                </div>
-                                <div className="earn-points-item">
-                                  <strong>Points:</strong>
-                                  <div className="earn-points-value">{row.Points}</div>
-                                </div>
-                              </div>
-                                </div>
-                              </div> */}
-                              {/* <div className="info-card-solo" onClick={() => showNote(row.ReferalAddress)}>
-                                <strong>Your Uppside:</strong> {row.id}
-                              </div>
-                              <div id="note-container" style={{ display: 'none' }}>
-                                <div id="note" className="note"></div>
-                              </div> */}
-
                               <div className="info-card-new">
                                 <div className="info-details">
                                   <div className="info-part-new"><strong>Welcome</strong> </div>
                                   <div className="info-part-new">{row.OwnerAddress}</div>
+                                  <div className="info-part-new"><strong>Level:</strong> {HonyLogo}</div>
                                 </div>
+                                <img src={`./${HonyLogo}.JPG`} alt="Start Level" className="logo" />
                                 <div className="info-icon" onClick={handleSignOut}>
-                                  <FontAwesomeIcon icon ={faSignOut} className="members-icon-new" size="2x" />
+                                  <FontAwesomeIcon icon={faSignOut} className="members-icon-new" size="2x" />
                                 </div>
                               </div>
 
@@ -1059,13 +1094,6 @@ function App() {
                                 </div>
                               )}
 
-
-
-
-
-
-
-
                               {row.ProID && (
                                 <div className="info-card-new">
                                   <div className="info-details">
@@ -1077,12 +1105,6 @@ function App() {
                                     <FontAwesomeIcon icon={faUsers} className="members-icon-new" size="2x" onClick={() => handleGenerateList} />
                                   </div>
                                 </div>
-
-                                // <div className="info-card">
-                                //   <div className="info-part"><strong>Pro Hand:</strong></div>
-                                //   <div className="info-part">{row.ProID}</div>
-                                //   <div className="info-part" style={{ textAlign: 'right' }}>{row.ProPoint}</div>
-                                // </div>
                               )}
                               <div className="info-card">
                                 <div className="info-part"><strong>Weekly Points:</strong></div>
@@ -1096,34 +1118,20 @@ function App() {
                                 <div className="info-part"><strong>Total Rewards:</strong></div>
                                 <div className="info-part" style={{ textAlign: 'right' }}>{row.TotalGain / 1000000000} TON</div>
                               </div>
-                              {/* <div className="earn-points-container">
-                                <div className="earn-points-item">
-                                  <strong>Earn:</strong>
-                                  <div className="earn-points-value">{(row.TotalGain / 1000000000)}</div>
-                                </div>
-                                <div className="earn-points-item">
-                                  <strong>Points:</strong>
-                                  <div className="earn-points-value">{row.Points}</div>
-                                </div>
-                              </div> */}
                             </div>
-
                           </li>
                         ))}
                       </ul>
                       <div>
-                        <button className="action-button" onClick={handleShare}>Share Referal</button>
-                        {/* <div className="app-container">
-                          <div className="list-container">
-                            {userHierarchy.length > 0 && (
-                              <ul className="hierarchy-list">
-                                {userHierarchy.map((user, index) => (
-                                  <li key={index} className="hierarchy-item">{user}</li>
-                                ))}
-                              </ul>
-                            )}
+                        <div className="button-container">
+                          <div className="buy-row" style={{ border: 'none' }}>
+                            <div className="button-row">
+                              <button className="action-button" onClick={handleShare}>Share Referal</button>
+                              <button className="action-button" onClick={() => window.open('https://t.me/Saeidzng', '_blank')}>Support</button>
+
+                            </div>
                           </div>
-                        </div> */}
+                        </div>
 
                         {showShareDialog && (
                           <div className="dialog-overlay">
@@ -1145,18 +1153,19 @@ function App() {
                     <div  >
                       <div>
                         <div className="welcome-name">
-
-                          <strong>Welcome</strong>
-                          <div className="info">{welcomeDisplayName}</div>
+                        <div className="info"><strong>Welcome</strong> {welcomeDisplayName}</div>
+                        </div>
+                        <div className="button-container">
+                          <div className="button-row-single">
+                            <div className="info-icon" onClick={handleSignOut}>
+                              <FontAwesomeIcon icon={faSignOut} className="members-icon-new" size="2x" />
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-
                       <div className="button-container">
                         <div className="buy-row">
-                          {/* <div className="buy-label">
-                          <label>Buy Chicken</label>
-                        </div> */}
                           <div className="button-row">
                             <button className="action-button" style={{ marginTop: '40px' }} onClick={handleGetLoan}>Get Loan</button>
                             <button className="action-button" style={{ marginTop: '40px' }} onClick={handleBuyProduct}>Buy Product</button>
@@ -1164,15 +1173,14 @@ function App() {
                         </div>
                       </div>
                     </div>
-
-
+                    
                   )}
-                </div>
+                            {/* <button className="action-button" style={{ marginTop: '40px' }} onClick={ () => handleCerateransaction("10000000")}>Get Loan</button> */}
 
+                </div>
               </div>
             ) : (
               <div>
-
                 <br />
                 <br />
                 <br />
@@ -1182,7 +1190,6 @@ function App() {
             )}
           </div>
         )}
-
 
         {page_n === 1 && (
           <div className="form-container">
@@ -1290,6 +1297,38 @@ function App() {
               )}
             </div>
           </div>
+        )}
+
+        {page_n === 5 && (
+          <div className="app-container">
+            <div className="list-container">
+              <h3>Our Products</h3>
+              <p className="justified-text">
+                Our fully automated robot called Phoenix is sold in the world of web2 like the mql5 site for $2000, but you get 90% discount and loan from our smart contract on the ton network of our web3 services with a payment of only 10% and our offer for use and continuous profit is $10,000, we will activate the product for you as soon as you charge the account and intend to launch it, this means subscription in your favor, you can save half of that amount and win up to $50 from our lottery and compensate for your money deficit by introducing a few customers. Our offer to marketers is to earn money Keep money Multiply money
+              </p>
+            </div>
+          </div>
+
+        )}
+
+        {page_n === 6 && (
+          <div className="app-container">
+            <div className="list-container">
+              <h3>Our Hybrid Plan</h3>
+              <p className="justified-text">
+                Our Hybrid Plan Features:
+                1- 10% Direct Selling Bonus.
+                2- For each balance, you receive one point and 60% of the sales in the smart contract pool are divided equally between the points once a week.
+                The income limit for each desk is $500 per day, $3500 per week and $15,000 per month.
+                Note: There is no limit for accounts and wallets.
+                3- After earning $100,000, you are allowed to start a third line,
+                which will add $30,000 per month to the previous income limit (details will be announced in the eligible account).
+                4- After $250,000, you are allowed to start a fourth line,
+                which will add $40,000 to the previous income limit (details will be announced in the eligible account).
+                5- After earning $500,000, you are allowed to start a fifth line, which will add $50,000 per month to your previous income limit. Note: The first 100 people to reach this point will become EA ambassadors and will have shares in the company's DEX.    </p>
+            </div>
+          </div>
+
         )}
       </div>
     </div>

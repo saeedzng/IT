@@ -263,7 +263,7 @@ body {
 }
 
 .buy-row {
-  padding: 5px;
+  padding: 10px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   margin-bottom: 10px;
@@ -544,6 +544,11 @@ ul {
   padding: 15px;
   margin: 0;
 }
+
+.justified-text {
+  text-align: justify;
+}
+
 
 
 
