@@ -50,7 +50,7 @@ function App() {
       ConvertReferalIDToReferalEmail(Number(ReferalIDFromUrl)); // Pass the value directly to the function
     }
     if (!ReferalIDFromUrl) {
-      WebApp.showAlert(`You Must Open App with Rerefal ID Atachetd To The Link Other`);
+      WebApp.showAlert(`You Must Open App By Link In Telegram`);
       // setReferal_ID_FromURL(Number(1)); // Ensure it's a number
       // ConvertReferalIDToReferalEmail(Number(1)); // Pass the value directly to the function
     }
@@ -416,7 +416,7 @@ function App() {
   const handleCerateransaction = async (price: string) => {
     try {
       const senderJettonWalletAddress = await getSenderJettonWalletAddress(logedInUserTonAddress);
-      // console.log(senderJettonWalletAddress)
+      //  console.log(senderJettonWalletAddress)
       let datacellBuilder = beginCell()
       .storeUint(0x0f8a7ea5, 32) // Method ID for "transfer" as per Jetton standard
       .storeUint(0, 64) // Query ID (0 for no specific query)
@@ -461,7 +461,7 @@ function App() {
 
 
 
-  const updateReferalTotalGain = async (ownerAddress: string) => {
+/*   const updateReferalTotalGain = async (ownerAddress: string) => {
     try {
       const { data: referalUserData, error: referalUserError } = await supabase
         .from('Usertbl')
@@ -494,7 +494,7 @@ function App() {
     } catch (error) {
       console.error('Error in updateReferalTotalGain:', error);
     }
-  };
+  }; */
 
 
 
@@ -772,7 +772,8 @@ function App() {
     referalAddress = referalData?.ReferalAddress || null;
 
     // Store the direct referalAddress for updating TotalGain later
-    const directReferalAddress: string | null = referalAddress;
+
+/*     const directReferalAddress: string | null = referalAddress; */
 
     // Loop through the referral chain to update points
     while (referalAddress) {
@@ -838,11 +839,11 @@ function App() {
     }
 
     // After the loop, update the TotalGain of the direct referral
-    if (directReferalAddress) {
+/*     if (directReferalAddress) {
       await updateReferalTotalGain(directReferalAddress);
     } else {
       console.error('Direct referalAddress is null.');
-    }
+    } */
 
     // Update FullPay status if buy10Percent is 2000000
   if (buy10Percent === 2000000) {
@@ -1019,9 +1020,6 @@ function App() {
           </div>
           <div className="right">
             <TonConnectButton />
-            {/* {user && (
-              <button onClick={handleSignOut} className="logout-button">Logout</button>
-            )} */}
           </div>
         </div>
         <nav className="menu">
