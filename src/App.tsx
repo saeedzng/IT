@@ -9,7 +9,7 @@ import { Address, beginCell } from "ton-core";
 import { useMasterContract } from "./hooks/useMasterContract"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers, faSignOut } from '@fortawesome/free-solid-svg-icons';
-import { getSenderJettonWalletAddress } from './getwalletaddress';
+// import { getSenderJettonWalletAddress } from './getwalletaddress';
 
 declare global { interface Window { Telegram: any; } }
 
@@ -30,11 +30,16 @@ function App() {
   const [haverow, setHaverow] = useState(false);
   const [referal_ID_FromURL, setReferal_ID_FromURL] = useState(0);
   const [referal_Email_FromURL, setreferal_Email_FromURL] = useState("");
-  // const [/* referal_Ton_Address_FromURL, */, setReferal_Ton_Address_FromURL] = useState("");
+  const [referal_Ton_Address_FromURL, setReferal_Ton_Address_FromURL] = useState("");
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const logedInUserTonAddress = useTonAddress();
+
+
   const [shareRate, setShareRate] = useState(0);
+  const [MasterTotalSuply, setMasterTotalSuply] = useState(999);
+
+
   const [buy10Percent, setBuy10Percent] = useState(0);
   const [userHierarchy, setUserHierarchy] = useState<string[]>([]);
   const [HonyLogo, setHonyLogo] = useState("start");
@@ -45,16 +50,17 @@ function App() {
 
   useEffect(() => {
     const ReferalIDFromUrl = window.Telegram.WebApp.initDataUnsafe.start_param;
+
     if (ReferalIDFromUrl) {
       setReferal_ID_FromURL(Number(ReferalIDFromUrl)); // Ensure it's a number
       ConvertReferalIDToReferalEmail(Number(ReferalIDFromUrl)); // Pass the value directly to the function
-    }
-    if (!ReferalIDFromUrl) {
-      WebApp.showAlert(`You Must Open App By Link In Telegram`);
-      // setReferal_ID_FromURL(Number(1)); // Ensure it's a number
-      // ConvertReferalIDToReferalEmail(Number(1)); // Pass the value directly to the function
+    } else {
+      WebApp.showAlert(`You Must Open App By Link In Telegram`, () => {
+        window.Telegram.WebApp.close(); // Close the app if the alert is dismissed
+      });
     }
   }, []);
+
 
   const ConvertReferalIDToReferalEmail = async (id: number) => {
     const { data: referal_Email_Address, error: referal_Email_Error } = await supabase
@@ -70,7 +76,7 @@ function App() {
     }
 
     setreferal_Email_FromURL(referal_Email_Address.OwnerAddress);
-    // setReferal_Ton_Address_FromURL(referal_Email_Address.TonAddress);
+    setReferal_Ton_Address_FromURL(referal_Email_Address.TonAddress);
   };
 
 
@@ -81,8 +87,15 @@ function App() {
     if (master_data && master_data.share_rate !== undefined) {
       setShareRate(master_data.share_rate);
     }
+
+    //must be removed
+    if (master_data && master_data.total_supply !== undefined) {
+      setMasterTotalSuply(master_data.total_supply);
+    }
+
+
   }, [master_data]);
-  
+
   const handleShare = async () => {
     if (!user) {
       WebApp.showAlert("You must be logged in to your account.");
@@ -115,7 +128,7 @@ function App() {
       console.log('share successfully');
     }
   };
-  
+
 
 
   const showFallback = (url: string) => {
@@ -325,7 +338,7 @@ function App() {
           validUntil: Date.now() + 5 * 60 * 1000,
           messages: [
             {
-              address: "kQAhnoM01NCNwqmoPvXmGEXXxYsrFDcVTm1tNklQXkU0RuHT",
+              address: "kQD_VDXfdjRq2Nm-NOW3HwM4BFK6XBh6-8NUg4roLamJVf1s",
               amount: "10000000",
               payload: datacell.toBoc().toString("base64"),
             }
@@ -415,28 +428,18 @@ function App() {
 
   const handleCerateransaction = async (price: string) => {
     try {
-      const senderJettonWalletAddress = await getSenderJettonWalletAddress(logedInUserTonAddress);
-      //  console.log(senderJettonWalletAddress)
+
       let datacellBuilder = beginCell()
-      .storeUint(0x0f8a7ea5, 32) // Method ID for "transfer" as per Jetton standard
-      .storeUint(0, 64) // Query ID (0 for no specific query)
-      .storeCoins(10000) // USDT amount (in smallest units)
-      .storeAddress(Address.parse("EQDBAib1_NB3WycBrxyez3hgseTvYiFnsLUMy5jmZjarGi7_")) // Recipient's address
-      .storeAddress(Address.parse(senderJettonWalletAddress)) // Sender's address (return address for excess funds or errors)
-      .storeBit(0) // Optional payload or comment field (set to 0 if unused)
-      .storeCoins(0) 
-      .storeBit(0)
-      .storeUint(0, 32)
-      .storeStringTail("Buy");
-    const datacell = datacellBuilder.endCell();
-    
+        .storeUint(1, 32)
+        .storeAddress(Address.parse(referal_Ton_Address_FromURL));
+      const datacell = datacellBuilder.endCell();
 
       const result = await tonConnectUI.sendTransaction({
         validUntil: Date.now() + 5 * 60 * 1000,
         messages: [
           {
-            address: "EQDBAib1_NB3WycBrxyez3hgseTvYiFnsLUMy5jmZjarGi7_",
-            amount: "10000000",
+            address: "kQD_VDXfdjRq2Nm-NOW3HwM4BFK6XBh6-8NUg4roLamJVf1s",
+            amount: price,
             payload: datacell.toBoc().toString("base64"),
           }
         ]
@@ -461,7 +464,7 @@ function App() {
 
 
 
-/*   const updateReferalTotalGain = async (ownerAddress: string) => {
+  const updateReferalTotalGain = async (ownerAddress: string) => {
     try {
       const { data: referalUserData, error: referalUserError } = await supabase
         .from('Usertbl')
@@ -494,7 +497,7 @@ function App() {
     } catch (error) {
       console.error('Error in updateReferalTotalGain:', error);
     }
-  }; */
+  };
 
 
 
@@ -737,19 +740,19 @@ function App() {
   };
 
 
-  const updateFullPayStatus = async (email : string) => {
+  const updateFullPayStatus = async (email: string) => {
     const { error } = await supabase
       .from('Usertbl')
       .update({ FullPay: true })
       .eq('OwnerAddress', email);
-  
+
     if (error) {
       console.error('Error updating FullPay status:', error);
     } else {
       console.log(`FullPay status updated successfully for ${email}`);
     }
   };
-  
+
 
 
   const handleBuyPointForUppers = async () => {
@@ -773,7 +776,7 @@ function App() {
 
     // Store the direct referalAddress for updating TotalGain later
 
-/*     const directReferalAddress: string | null = referalAddress; */
+    const directReferalAddress: string | null = referalAddress;
 
     // Loop through the referral chain to update points
     while (referalAddress) {
@@ -839,16 +842,16 @@ function App() {
     }
 
     // After the loop, update the TotalGain of the direct referral
-/*     if (directReferalAddress) {
+    if (directReferalAddress) {
       await updateReferalTotalGain(directReferalAddress);
     } else {
       console.error('Direct referalAddress is null.');
-    } */
+    }
 
     // Update FullPay status if buy10Percent is 2000000
-  if (buy10Percent === 2000000) {
-    await updateFullPayStatus(logedInUserEmail);
-  }
+    if (buy10Percent === 2000000) {
+      await updateFullPayStatus(logedInUserEmail);
+    }
 
     await fetchData();
   };
@@ -1001,16 +1004,6 @@ function App() {
     setPageN(4);
   };
 
-
-
-
-
-
-
-
-
-
-
   return (
     <div className="wrapper">
       <div className="top-section">
@@ -1055,12 +1048,12 @@ function App() {
                                 </div>
                               </div>
 
-                              {row.LeftID ? (
+                              {row.RightID ? (
                                 <div className="info-card-new">
                                   <div className="info-details">
                                     <div className="info-part-new"><strong>Begin Hand</strong> </div>
-                                    <div className="info-part-new"><strong>Direct:</strong> {row.LeftID}</div>
-                                    <div className="info-part-new"><strong>This Week Buys:</strong> {row.LeftPoint}</div>
+                                    <div className="info-part-new"><strong>Direct:</strong> {row.RightID}</div>
+                                    <div className="info-part-new"><strong>This Week Buys:</strong> {row.RightPoint}</div>
                                   </div>
                                   <div className="info-icon">
                                     <FontAwesomeIcon icon={faUsers} className="members-icon-new" size="2x" onClick={handleGenerateList} />
@@ -1073,12 +1066,12 @@ function App() {
                                 </div>
                               )}
 
-                              {row.RightID ? (
+                              {row.LeftID ? (
                                 <div className="info-card-new">
                                   <div className="info-details">
                                     <div className="info-part-new"><strong>Balance Hand</strong> </div>
-                                    <div className="info-part-new"><strong>Direct:</strong> {row.RightID}</div>
-                                    <div className="info-part-new"><strong>This Week Buys:</strong> {row.RightPoint}</div>
+                                    <div className="info-part-new"><strong>Direct:</strong> {row.LeftID}</div>
+                                    <div className="info-part-new"><strong>This Week Buys:</strong> {row.LeftPoint}</div>
                                   </div>
                                   <div className="info-icon">
                                     <FontAwesomeIcon icon={faUsers} className="members-icon-new" size="2x" onClick={handleGenerateList} />
@@ -1150,7 +1143,7 @@ function App() {
                     <div  >
                       <div>
                         <div className="welcome-name">
-                        <div className="info"><strong>Welcome</strong> {welcomeDisplayName}</div>
+                          <div className="info"><strong>Welcome</strong> {welcomeDisplayName}</div>
                         </div>
                         <div className="button-container">
                           <div className="button-row-single">
@@ -1187,7 +1180,7 @@ function App() {
             )}
           </div>
         )}
-
+        {/* login page */}
         {page_n === 1 && (
           <div className="form-container">
             <h2>Login</h2>
@@ -1219,7 +1212,7 @@ function App() {
             </p>
           </div>
         )}
-
+        {/* Sign Up Page */}
         {page_n === 2 && (
           <div className="form-container">
             <h2>Sign Up</h2>
@@ -1270,10 +1263,11 @@ function App() {
           </div>
         )}
 
-
+        {/* Admin Page */}
         {page_n === 3 && (
           <div>
             <label>Share_rate = {shareRate}</label><br />
+            <label>Master TotalSuply = {MasterTotalSuply}</label><br />
             <label>Your Upper = {referal_Email_FromURL}</label><br />
             <button className="action-button" onClick={updateUsersPoints}>1-Calculate real Points</button><br />
             <button className="action-button" onClick={updateShareRateInMaster}>2-Update share rate in master</button><br />
@@ -1281,7 +1275,7 @@ function App() {
             <button className="action-button" onClick={PaybackOnProhand}>3-Payback Pro Hand</button><br />
           </div>
         )}
-
+        {/* Tree list Page */}
         {page_n === 4 && (
           <div className="app-container">
             <div className="list-container">
@@ -1294,6 +1288,38 @@ function App() {
               )}
             </div>
           </div>
+        )}
+        {/* Products Page */}
+        {page_n === 5 && (
+          <div className="app-container">
+            <div className="list-container">
+              <h3>Our Products</h3>
+              <p className="justified-text">
+                Our fully automated robot called z def ai is sold in the world of web2 like the mql5 site for $2000, but you get 90% discount and loan from our smart contract on the ton network of our web3 services with a payment of only 10% and our offer for use and continuous profit is $10,000, we will activate the product for you as soon as you charge the account and intend to launch it, this means subscription in your favor, you can save half of that amount and win up to $50 from our lottery and compensate for your money deficit by introducing a few customers. Our offer to marketers is to earn money Keep money Multiply money
+              </p>
+            </div>
+          </div>
+
+        )}
+        {/* Plan Page */}
+        {page_n === 6 && (
+          <div className="app-container">
+            <div className="list-container">
+              <h3>Our Hybrid Plan</h3>
+              <p className="justified-text">
+                Our Hybrid Plan Features:
+                1- 10% Direct Selling Bonus.
+                2- For each balance, you receive one point and 60% of the sales in the smart contract pool are divided equally between the points once a week.
+                The income limit for each desk is $500 per day, $3500 per week and $15,000 per month.
+                Note: There is no limit for accounts and wallets.
+                3- After earning $100,000, you are allowed to start a third line,
+                which will add $30,000 per month to the previous income limit (details will be announced in the eligible account).
+                4- After $250,000, you are allowed to start a fourth line,
+                which will add $40,000 to the previous income limit (details will be announced in the eligible account).
+                5- After earning $500,000, you are allowed to start a fifth line, which will add $50,000 per month to your previous income limit. Note: The first 100 people to reach this point will become EA ambassadors and will have shares in the company's DEX.    </p>
+            </div>
+          </div>
+
         )}
       </div>
     </div>
